@@ -1,0 +1,39 @@
+# Name of the executable
+OUTPUT = c--
+
+# Cpp compiler
+CXX = g++
+
+# Cpp flags
+CXXFLAGS = \
+	-O2 \
+	-Wall \
+	-Wextra \
+	-Werror
+
+# Find all source files
+SRCFILES := $(shell find -L * -type f | LC_ALL=C sort)
+CPPFILES := $(filter %.cpp,$(SRCFILES))
+OBJ := $(addprefix obj/,$(CPPFILES:.cpp=.cpp.o))
+
+.PHONY: all
+all: obj/$(OUTPUT)
+
+# Link rules for the final executable.
+obj/$(OUTPUT): $(OBJ)
+	mkdir -p "$$(dirname $@)"
+	$(CXX) $(CXXFLAGS) $(OBJ) -o $@
+
+# Compilation rules for *.cpp files.
+obj/%.cpp.o: %.cpp 
+	mkdir -p "$$(dirname $@)"
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Build and run the executable
+run: all
+	./obj/$(OUTPUT)
+
+# Remove object files and the final executable.
+.PHONY: clean
+clean:
+	rm -rf obj
