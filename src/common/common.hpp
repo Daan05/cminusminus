@@ -5,7 +5,7 @@
 
 namespace common
 {
-std::string read_file(const std::string &path);
+std::string read_file(std::string const &path);
 }
 
 #endif
