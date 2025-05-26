@@ -9,7 +9,8 @@ CXXFLAGS = \
 	-O2 \
 	-Wall \
 	-Wextra \
-	-Werror
+	-Werror \
+	-std=c++26
 
 # Find all source files
 SRCFILES := $(shell find -L * -type f | LC_ALL=C sort)

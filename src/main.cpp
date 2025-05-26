@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "common/common.hpp"
 #include "lexer.hpp"
 
 int main(int argc, char **argv)
@@ -13,12 +14,9 @@ try
         );
     }
 
-    Lexer lexer;
-    for (size_t ix = 1; ix != static_cast<size_t>(argc); ++ix)
-    {
-        if (argv[ix][0] != '-')
-            lexer.lex(argv[ix]);
-    }
+    std::string source = common::read_file(argv[1]);
+    Lexer lexer(source);
+    lexer.lex();
 }
 catch (std::runtime_error const &error)
 {
