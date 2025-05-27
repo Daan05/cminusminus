@@ -3,6 +3,7 @@
 
 #include "common/common.hpp"
 #include "lexer.hpp"
+#include "parser.hpp"
 
 int main(int argc, char **argv)
 try
@@ -16,7 +17,16 @@ try
 
     std::string source = common::read_file(argv[1]);
     Lexer lexer(source);
-    lexer.lex();
+
+    std::vector<Token> tokens = lexer.lex();
+    for (Token const &token : tokens)
+    {
+        token.print();
+        std::cout << '\n';
+    }
+
+    Parser parser(tokens);
+    parser.parse();
 }
 catch (std::runtime_error const &error)
 {
