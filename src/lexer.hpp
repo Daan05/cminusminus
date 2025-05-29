@@ -22,12 +22,15 @@ class Lexer
     size_t m_current;
     size_t m_line;
     size_t m_line_start;
- 
+
    private:
-    bool is_at_end();
     void lex_token();
     void add_token(TokenType kind);
     void add_num_token();
+    void add_str_token();
+
+    bool is_at_end();
+    bool match(char expected);
 };
 
 #endif

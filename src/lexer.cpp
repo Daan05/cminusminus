@@ -1,8 +1,11 @@
 #include "lexer.hpp"
 
 #include <cctype>
+#include <stdexcept>
+#include <iostream>
 #include <string>
 #include <vector>
+#include "common/token.hpp"
 
 Lexer::Lexer(std::string const &source)
     : source(source),
@@ -27,16 +30,8 @@ std::vector<Token> Lexer::lex()
         Token(TokenType::Eof, "", Literal(), m_line, m_start - m_line_start)
     );
 
-    // for (Token const &token : tokens)
-    // {
-    //     token.print();
-    //     std::cout << '\n';
-    // }
-
     return tokens;
 }
-
-bool Lexer::is_at_end() { return m_current >= source.length(); }
 
 void Lexer::lex_token()
 {
@@ -46,6 +41,18 @@ void Lexer::lex_token()
 
     switch (c)
     {
+    case '(':
+        add_token(TokenType::LeftParen);
+        break;
+    case ')':
+        add_token(TokenType::RightParen);
+        break;
+    case '{':
+        add_token(TokenType::LeftBrace);
+        break;
+    case '}':
+        add_token(TokenType::RightBrace);
+        break;
     case '+':
         add_token(TokenType::Plus);
         break;
@@ -58,18 +65,43 @@ void Lexer::lex_token()
     case '/':
         add_token(TokenType::Slash);
         break;
+    case ',':
+        add_token(TokenType::Comma);
+        break;
+    case '.':
+        add_token(TokenType::Dot);
+        break;
+    case '!':
+        add_token(match('=') ? TokenType::BangEqual : TokenType::Bang);
+        break;
+    case '=':
+        add_token(match('=') ? TokenType::EqualEqual : TokenType::Equal);
+        break;
+    case '<':
+        add_token(match('=') ? TokenType::LessEqual : TokenType::Less);
+        break;
+    case '>':
+        add_token(match('=') ? TokenType::GreaterEqual : TokenType::Greater);
+        break;
+    case ' ':
+        break;
     case '\n':
         m_line++;
         m_line_start = m_current - 1;
-        break;
-    case ' ':
         break;
     default:
         if (std::isdigit(c))
         {
             add_num_token();
         }
-        break;
+        else
+        {
+            // throw std::runtime_error(
+            std::cout << "line " + std::to_string(m_line) +
+                             ": Unexpected character (" + c + ").\n";
+            // );
+            break;
+        }
     }
 }
 
@@ -103,4 +135,17 @@ void Lexer::add_num_token()
     tokens.push_back(Token(
         TokenType::Number, lexeme, Literal(num), m_line, m_start - m_line_start
     ));
+}
+
+bool Lexer::is_at_end() { return m_current >= source.length(); }
+
+bool Lexer::match(char expected)
+{
+    if (is_at_end())
+        return false;
+    if (source[m_current] != expected)
+        return false;
+
+    m_current++;
+    return true;
 }

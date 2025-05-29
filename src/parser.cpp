@@ -115,7 +115,7 @@ std::unique_ptr<Expr> Parser::parse_primary()
     }
 
     throw std::runtime_error(
-        std::format("line %d: %s", peek().line, "Expected expression")
+        std::to_string(peek().line) + "Expected expression"
     );
 }
 

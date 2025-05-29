@@ -22,12 +22,13 @@ try
 
     Lexer lexer(source);
     std::vector<Token> tokens = lexer.lex();
-    
-    // for (Token const &token : tokens)
-    // {
-    //     token.print();
-    //     std::cout << '\n';
-    // }
+
+    std::cout << '\n';
+    for (Token const &token : tokens)
+    {
+        token.print();
+    }
+    std::cout << '\n';
 
     Parser parser(tokens);
     std::unique_ptr<Expr> expressions = parser.parse();

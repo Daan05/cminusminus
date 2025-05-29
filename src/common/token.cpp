@@ -14,8 +14,8 @@ Token::~Token() {}
 
 void Token::print() const
 {
-    std::cout << "kind: " << static_cast<int>(kind) << "\nlexeme: \"" << lexeme
-              << "\"\n";
+    std::cout << "kind: " << static_cast<int>(kind) << " lexeme: \"" << lexeme
+              << "\" ";
     literal.print();
-    std::cout << "line: " << line << "\ncolumn: " << column << "\n";
+    std::cout << " line: " << line << " column: " << column << "\n";
 }
