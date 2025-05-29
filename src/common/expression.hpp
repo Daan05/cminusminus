@@ -1,46 +1,47 @@
 #ifndef EXPRESSION_HPP
 #define EXPRESSION_HPP
 
-#include <variant>
+#include <memory>
+#include <string>
 
-#include "literal.hpp"
 #include "token.hpp"
 
-// add precedence later on
-enum class BinaryOperator
+class Visitor
 {
-    Add,
-    Sub,
-    Mul,
-    Div,
-
-    // Equal,
-    // NotEqual,
-    // etc...
+   public:
+    virtual ~Visitor() = default;
+    virtual void visitBinary(const class BinaryExpr &expr) = 0;
+    virtual void visitLiteral(const class LiteralExpr &expr) = 0;
+    virtual void visitUnary(const class UnaryExpr &expr) = 0;
+    virtual void visitGrouping(const class GroupingExpr &expr) = 0;
 };
 
 class Expr
 {
    public:
     virtual ~Expr() = default;
-    int getLine() const { return line; }
+    int get_line() const;
+    virtual void accept(Visitor &visitor) const = 0;
+
+    int m_line;
 
    protected:
     Expr(int line);
-
-   private:
-    int line;
 };
 
 class BinaryExpr : public Expr
 {
    public:
-    BinaryExpr(Expr left, Token op, Expr right, int line);
+    BinaryExpr(
+        std::unique_ptr<Expr> left, Token op, std::unique_ptr<Expr> right,
+        int line
+    );
 
-   private:
-    Expr left;
-    Token op;
-    Expr right;
+    void accept(Visitor &visitor) const override;
+
+    std::unique_ptr<Expr> m_left;
+    Token m_op;
+    std::unique_ptr<Expr> m_right;
 };
 
 class LiteralExpr : public Expr
@@ -48,27 +49,43 @@ class LiteralExpr : public Expr
    public:
     LiteralExpr(Literal literal, int line);
 
-   private:
-    Literal literal;
+    void accept(Visitor &visitor) const override;
+
+    Literal m_literal;
 };
 
 class UnaryExpr : public Expr
 {
    public:
-    UnaryExpr(Token op, Expr right, int line);
+    UnaryExpr(Token op, std::unique_ptr<Expr> right, int line);
 
-   private:
-    Token op;
-    Expr right;
+    void accept(Visitor &visitor) const override;
+
+    Token m_op;
+    std::unique_ptr<Expr> m_right;
 };
 
 class GroupingExpr : public Expr
 {
    public:
-    GroupingExpr(Expr expr, int line);
+    GroupingExpr(std::unique_ptr<Expr> expr, int line);
+
+    void accept(Visitor &visitor) const override;
+
+    std::unique_ptr<Expr> m_expr;
+};
+
+class ASTPrinter : public Visitor
+{
+   public:
+    void print(Expr const &expr);
+    void visitBinary(BinaryExpr const &expr) override;
+    void visitLiteral(LiteralExpr const &expr) override;
+    void visitUnary(UnaryExpr const &expr) override;
+    void visitGrouping(GroupingExpr const &expr) override;
 
    private:
-    Expr expr;
+    std::string m_output;
 };
 
 #endif

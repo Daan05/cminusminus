@@ -2,6 +2,7 @@
 #define PARSER_HPP
 
 #include <cstddef>
+#include <memory>
 #include <vector>
 #include "common/expression.hpp"
 #include "common/token.hpp"
@@ -12,20 +13,20 @@ class Parser
     Parser(std::vector<Token> tokens);
     ~Parser();
 
-    Expr parse();
+    std::unique_ptr<Expr> parse();
 
    private:
     std::vector<Token> tokens;
     size_t current;
 
    private:
-    Expr parse_expr();
-    Expr parse_equality();
-    Expr parse_comparison();
-    Expr parse_term();
-    Expr parse_factor();
-    Expr parse_unary();
-    Expr parse_primary();
+    std::unique_ptr<Expr> parse_expr();
+    std::unique_ptr<Expr> parse_equality();
+    std::unique_ptr<Expr> parse_comparison();
+    std::unique_ptr<Expr> parse_term();
+    std::unique_ptr<Expr> parse_factor();
+    std::unique_ptr<Expr> parse_unary();
+    std::unique_ptr<Expr> parse_primary();
 
     void synchronize();
 

@@ -13,7 +13,7 @@ std::string read_file(const std::string &path)
         throw std::runtime_error("Failed to open: " + path);
     }
 
-    const auto size = file.tellg();
+    auto const size = file.tellg();
     if (size == -1)
     {
         throw std::runtime_error("Failed to determine file size: " + path);

@@ -1,8 +1,10 @@
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 
 #include "common/common.hpp"
 #include "common/expression.hpp"
+#include "common/token.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 
@@ -17,19 +19,21 @@ try
     }
 
     std::string source = common::read_file(argv[1]);
-    Lexer lexer(source);
 
+    Lexer lexer(source);
     std::vector<Token> tokens = lexer.lex();
-    for (Token const &token : tokens)
-    {
-        token.print();
-        std::cout << '\n';
-    }
+    
+    // for (Token const &token : tokens)
+    // {
+    //     token.print();
+    //     std::cout << '\n';
+    // }
 
     Parser parser(tokens);
-    Expr expressions = parser.parse();
+    std::unique_ptr<Expr> expressions = parser.parse();
 
-
+    ASTPrinter printer;
+    printer.print(*expressions);
 }
 catch (std::runtime_error const &error)
 {

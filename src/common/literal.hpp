@@ -18,6 +18,7 @@ struct Literal
     LiteralValue value;
 
     void print() const;
+    std::string to_string() const;
 };
 
 #endif

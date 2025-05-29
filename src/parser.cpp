@@ -1,35 +1,43 @@
 #include "parser.hpp"
+
 #include <format>
+#include <memory>
 #include <stdexcept>
+#include <string>
 
 #include "common/expression.hpp"
 #include "common/token.hpp"
 
-Parser::Parser(std::vector<Token> tokens) : tokens(tokens), current(0) {}
+Parser::Parser(std::vector<Token> tokens)
+    : tokens(std::move(tokens)), current(0)
+{
+}
 
 Parser::~Parser() {}
 
-Expr Parser::parse() { return parse_expr(); }
+std::unique_ptr<Expr> Parser::parse() { return parse_expr(); }
 
-Expr Parser::parse_expr() { return parse_equality(); }
+std::unique_ptr<Expr> Parser::parse_expr() { return parse_equality(); }
 
-Expr Parser::parse_equality()
+std::unique_ptr<Expr> Parser::parse_equality()
 {
-    Expr expr = parse_comparison();
+    auto expr = parse_comparison();
 
     while (match({TokenType::BangEqual, TokenType::EqualEqual}))
     {
         Token op = previous();
-        Expr right = parse_comparison();
-        expr = BinaryExpr(expr, op, right, 1);
+        auto right = parse_comparison();
+        expr = std::make_unique<BinaryExpr>(
+            std::move(expr), op, std::move(right), op.line
+        );
     }
 
     return expr;
 }
 
-Expr Parser::parse_comparison()
+std::unique_ptr<Expr> Parser::parse_comparison()
 {
-    Expr expr = parse_term();
+    auto expr = parse_term();
 
     while (match(
         {TokenType::Greater, TokenType::GreaterEqual, TokenType::Less,
@@ -37,65 +45,73 @@ Expr Parser::parse_comparison()
     ))
     {
         Token op = previous();
-        Expr right = parse_term();
-        expr = BinaryExpr(expr, op, right, 1);
+        auto right = parse_term();
+        expr = std::make_unique<BinaryExpr>(
+            std::move(expr), op, std::move(right), op.line
+        );
     }
 
     return expr;
 }
 
-Expr Parser::parse_term()
+std::unique_ptr<Expr> Parser::parse_term()
 {
-    Expr expr = parse_factor();
+    auto expr = parse_factor();
 
     while (match({TokenType::Plus, TokenType::Minus}))
     {
         Token op = previous();
-        Expr right = parse_factor();
-        expr = BinaryExpr(expr, op, right, 1);
+        auto right = parse_factor();
+        expr = std::make_unique<BinaryExpr>(
+            std::move(expr), op, std::move(right), op.line
+        );
     }
 
     return expr;
 }
 
-Expr Parser::parse_factor()
+std::unique_ptr<Expr> Parser::parse_factor()
 {
-    Expr expr = parse_unary();
+    auto expr = parse_unary();
 
     while (match({TokenType::Slash, TokenType::Star}))
     {
         Token op = previous();
-        Expr right = parse_unary();
-        expr = BinaryExpr(expr, op, right, 1);
+        auto right = parse_unary();
+        expr = std::make_unique<BinaryExpr>(
+            std::move(expr), op, std::move(right), op.line
+        );
     }
 
     return expr;
 }
 
-Expr Parser::parse_unary()
+std::unique_ptr<Expr> Parser::parse_unary()
 {
     if (match({TokenType::Bang, TokenType::Minus}))
     {
         Token op = previous();
-        Expr right = parse_unary();
-        return UnaryExpr(op, right, 1);
+        auto right = parse_unary();
+        return std::make_unique<UnaryExpr>(op, std::move(right), op.line);
     }
 
     return parse_primary();
 }
 
-Expr Parser::parse_primary()
+std::unique_ptr<Expr> Parser::parse_primary()
 {
     if (match({TokenType::Number, TokenType::String}))
     {
-        return LiteralExpr(previous().literal, 1);
+        Token token = previous();
+        return std::make_unique<LiteralExpr>(token.literal, token.line);
     }
 
     if (match({TokenType::LeftParen}))
     {
-        Expr expr = parse_expr();
-        // consume(TokenType::RightParen, "Expect ')' after expression.");
-        return GroupingExpr(expr, 1);
+        Token paren = previous();  // Save left paren for line number
+        auto expr = parse_expr();
+        consume(TokenType::RightParen, "Expect ')' after expression");
+        return std::make_unique<GroupingExpr>(std::move(expr), paren.line);
     }
 
     throw std::runtime_error(
@@ -172,6 +188,5 @@ Token Parser::consume(TokenType type, std::string message)
     if (check(type))
         return advance();
 
-    throw std::runtime_error(std::format("line %d: %s", peek().line, message));
-    ;
+    throw std::runtime_error(message);
 }
