@@ -82,3 +82,61 @@ void ASTPrinter::visitGrouping(GroupingExpr const &expr)
     expr.m_expr->accept(*this);
     m_output += ")";
 }
+
+std::string ASTCodeGenerator::generate(Expr const &expr)
+{
+    m_output.clear();
+    expr.accept(*this);
+    return m_output;
+}
+
+void ASTCodeGenerator::visitBinary(BinaryExpr const &expr)
+{
+    // m_output += "(" + expr.m_op.lexeme + " ";
+    expr.m_left->accept(*this);
+    // m_output += " ";
+    expr.m_right->accept(*this);
+    // m_output += ")";
+    // std::cout << "binary\n";
+
+    m_output += "\tpop rax\n";
+    m_output += "\tpop rcx\n";
+    switch (expr.m_op.kind)
+    {
+    case TokenType::Plus:
+        m_output += "\tadd rax, rcx\n";
+        m_output += "\tpush rax\n";
+        break;
+    case TokenType::Minus:
+        m_output += "\tsub rcx, rax\n";
+        m_output += "\tpush rcx\n";
+        break;
+    case TokenType::Star:
+        m_output += "\timul rax, rcx\n";
+        m_output += "\tpush rax\n";
+        break;
+    case TokenType::Slash:
+        // later
+        break;
+    default:
+        break;
+    }
+}
+
+void ASTCodeGenerator::visitLiteral(LiteralExpr const &expr)
+{
+    m_output += "\tmov rax, " + expr.m_literal.to_string() + "\n";
+    m_output += "\tpush rax\n";
+}
+
+void ASTCodeGenerator::visitUnary(UnaryExpr const &expr)
+{
+    m_output += "(" + expr.m_op.lexeme + " ";
+    expr.m_right->accept(*this);
+    m_output += ")";
+}
+
+void ASTCodeGenerator::visitGrouping(GroupingExpr const &expr)
+{
+    expr.m_expr->accept(*this);
+}

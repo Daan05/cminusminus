@@ -32,9 +32,13 @@ obj/%.cpp.o: %.cpp
 
 # Build and run the executable
 run: all
-	./obj/$(OUTPUT)
+	./obj/$(OUTPUT) test.cmm
+
+compile: run
+	as -o test.o test.asm
+	gcc -o test test.o  
 
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
-	rm -rf obj
+	rm -rf obj test.asm test.o test

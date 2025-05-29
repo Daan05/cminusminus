@@ -88,4 +88,18 @@ class ASTPrinter : public Visitor
     std::string m_output;
 };
 
+class ASTCodeGenerator : public Visitor
+{
+   public:
+    std::string generate(Expr const &expr);
+    void visitBinary(BinaryExpr const &expr) override;
+    void visitLiteral(LiteralExpr const &expr) override;
+    void visitUnary(UnaryExpr const &expr) override;
+    void visitGrouping(GroupingExpr const &expr) override;
+
+private:
+    std::string m_output;
+    size_t int_count;
+};
+
 #endif

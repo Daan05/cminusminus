@@ -30,4 +30,16 @@ std::string read_file(const std::string &path)
 
     return content;
 }
+
+void write_file(std::string const &path, std::string const &code)
+{
+    std::ofstream file(path);
+
+    if (!file)
+    {
+        throw std::runtime_error("Failed to open for writing: " + path);
+    }
+
+    file << code;
+}
 }  // namespace common
