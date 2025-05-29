@@ -16,7 +16,7 @@ class Parser
     std::vector<Token> tokens;
 
    private:
-    // member functions
+    void parse_expr();
 };
 
 #endif

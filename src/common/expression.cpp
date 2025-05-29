@@ -2,7 +2,7 @@
 
 Expr::Expr(int line) : line(line) {}
 
-BinaryExpr::BinaryExpr(Expr left, Token op, Expr right, int line)
+BinaryExpr::BinaryExpr(Expr left, BinaryOperator op, Expr right, int line)
     : Expr(line), left(left), op(op), right(right)
 {
 }
