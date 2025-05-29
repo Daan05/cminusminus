@@ -2,6 +2,7 @@
 #include <stdexcept>
 
 #include "common/common.hpp"
+#include "common/expression.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 
@@ -26,7 +27,9 @@ try
     }
 
     Parser parser(tokens);
-    parser.parse();
+    Expr expressions = parser.parse();
+
+
 }
 catch (std::runtime_error const &error)
 {

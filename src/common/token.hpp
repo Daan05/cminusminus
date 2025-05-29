@@ -8,11 +8,33 @@
 
 enum class TokenType
 {
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
     Minus,
     Plus,
     Slash,
     Star,
     Number,
+    String,
+    Bang,
+    BangEqual,
+    EqualEqual,
+    Greater,
+    GreaterEqual,
+    Less,
+    LessEqual,
+    SemiColon,
+    Colon,
+    Struct,
+    Fn,
+    Let,
+    For,
+    If,
+    While,
+    Print,
+    Return,
     Eof,
 };
 

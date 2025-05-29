@@ -4,6 +4,7 @@
 #include <variant>
 
 #include "literal.hpp"
+#include "token.hpp"
 
 // add precedence later on
 enum class BinaryOperator
@@ -33,20 +34,41 @@ class Expr
 
 class BinaryExpr : public Expr
 {
-    BinaryExpr(Expr left, BinaryOperator op, Expr right, int line);
+   public:
+    BinaryExpr(Expr left, Token op, Expr right, int line);
 
+   private:
     Expr left;
-    BinaryOperator op;
+    Token op;
     Expr right;
 };
 
 class LiteralExpr : public Expr
 {
+   public:
     LiteralExpr(Literal literal, int line);
 
+   private:
     Literal literal;
 };
 
-using ExprType = std::variant<LiteralExpr, BinaryExpr>;
+class UnaryExpr : public Expr
+{
+   public:
+    UnaryExpr(Token op, Expr right, int line);
+
+   private:
+    Token op;
+    Expr right;
+};
+
+class GroupingExpr : public Expr
+{
+   public:
+    GroupingExpr(Expr expr, int line);
+
+   private:
+    Expr expr;
+};
 
 #endif
