@@ -22,16 +22,18 @@ std::string CodeGenerator::generate()
     m_output += "\nmain:\n";
     m_output += "\tpush rbp ; save caller's base pointer\n";
     m_output +=
-        "\tmov rbp, rsp ; set up a new base pointer frame for this function\n";
+        "\tmov rbp, rsp ; set up a new base pointer frame for this function\n\n";
 
     // our expression arithmetic
     // walk tree
+    ASTPrinter printer;
+    m_output += "\t; " + printer.print(*m_expr) + '\n';
     ASTCodeGenerator astCodeGenerator;
     m_output += astCodeGenerator.generate(*m_expr);
 
     // end
     // our expression result is saved on the stack
-    m_output += "\tmov rdi, fmt ; 1st argument (format string)\n";
+    m_output += "\n\tmov rdi, fmt ; 1st argument (format string)\n";
     m_output += "\tpop rsi ; 2nd argument (integer to print)\n";
     m_output +=
         "\txor eax, eax ; Clear RAX: required before calling variadic "

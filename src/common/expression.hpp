@@ -78,7 +78,7 @@ class GroupingExpr : public Expr
 class ASTPrinter : public Visitor
 {
    public:
-    void print(Expr const &expr);
+    std::string print(Expr const &expr);
     void visitBinary(BinaryExpr const &expr) override;
     void visitLiteral(LiteralExpr const &expr) override;
     void visitUnary(UnaryExpr const &expr) override;

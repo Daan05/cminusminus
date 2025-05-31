@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -48,11 +49,11 @@ void GroupingExpr::accept(Visitor &visitor) const
     visitor.visitGrouping(*this);
 }
 
-void ASTPrinter::print(Expr const &expr)
+std::string ASTPrinter::print(Expr const &expr)
 {
     m_output.clear();
     expr.accept(*this);
-    std::cout << m_output << std::endl;
+    return m_output;;
 }
 
 void ASTPrinter::visitBinary(BinaryExpr const &expr)
@@ -115,7 +116,9 @@ void ASTCodeGenerator::visitBinary(BinaryExpr const &expr)
         // later
         break;
     default:
-        // unreachable
+        throw std::runtime_error(
+            "unreachable code: ASTCodeGenerator::visitBinary()"
+        );
         break;
     }
 }
@@ -132,11 +135,16 @@ void ASTCodeGenerator::visitUnary(UnaryExpr const &expr)
     {
     case TokenType::Minus:
         m_output += "\tpop rax\n";
-        m_output += "\tnot rax\n";
-        m_output += "\tadd rax, 1\n";
+        m_output += "\tneg rax\n";
         m_output += "\tpush rax\n";
         break;
+    case TokenType::Bang:
+        // later
+        break;
     default:
+        throw std::runtime_error(
+            "unreachable code: ASTCodeGenerator::visitUnary()"
+        );
         break;
     }
 }
