@@ -41,7 +41,7 @@ try
 
 #if DEBUG_AST
     ASTPrinter printer;
-    std::cout << printer.print(*expressions) << '\n';
+    std::cout << printer.print(*expressions);
 #endif
 
     CodeGenerator generator(std::move(expressions));

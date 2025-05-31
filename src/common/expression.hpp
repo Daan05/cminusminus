@@ -2,6 +2,7 @@
 #define EXPRESSION_HPP
 
 #include <memory>
+#include <sstream>
 #include <string>
 
 #include "token.hpp"
@@ -85,7 +86,7 @@ class ASTPrinter : public Visitor
     void visitGrouping(GroupingExpr const &expr) override;
 
    private:
-    std::string m_output;
+    std::ostringstream m_output;
 };
 
 class ASTCodeGenerator : public Visitor
@@ -98,8 +99,7 @@ class ASTCodeGenerator : public Visitor
     void visitGrouping(GroupingExpr const &expr) override;
 
 private:
-    std::string m_output;
-    size_t int_count;
+    std::ostringstream m_output;
 };
 
 #endif

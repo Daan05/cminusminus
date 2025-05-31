@@ -32,7 +32,7 @@ obj/%.cpp.o: %.cpp
 
 # Build and run the executable
 run: all
-	@valgrind --log-file="valgrind.log" ./obj/c-- test.cmm
+	@valgrind --log-file="valgrind.log" ./obj/c-- test2.cmm
 
 # Assembles and runs the generated assembly file
 test: run

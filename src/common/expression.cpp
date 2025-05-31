@@ -1,6 +1,5 @@
 #include "expression.hpp"
 
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -53,42 +52,42 @@ std::string ASTPrinter::print(Expr const &expr)
 {
     m_output.clear();
     expr.accept(*this);
-    return m_output;;
+    return m_output.str();
 }
 
 void ASTPrinter::visitBinary(BinaryExpr const &expr)
 {
-    m_output += "(" + expr.m_op.lexeme + " ";
+    m_output << "(" << expr.m_op.lexeme << " ";
     expr.m_left->accept(*this);
-    m_output += " ";
+    m_output << " ";
     expr.m_right->accept(*this);
-    m_output += ")";
+    m_output << ")";
 }
 
 void ASTPrinter::visitLiteral(LiteralExpr const &expr)
 {
-    m_output += expr.m_literal.to_string();
+    m_output << expr.m_literal.to_string();
 }
 
 void ASTPrinter::visitUnary(UnaryExpr const &expr)
 {
-    m_output += "(" + expr.m_op.lexeme + " ";
+    m_output << "(" << expr.m_op.lexeme << " ";
     expr.m_right->accept(*this);
-    m_output += ")";
+    m_output << ")";
 }
 
 void ASTPrinter::visitGrouping(GroupingExpr const &expr)
 {
-    m_output += "(group ";
+    m_output << "(group ";
     expr.m_expr->accept(*this);
-    m_output += ")";
+    m_output << ")";
 }
 
 std::string ASTCodeGenerator::generate(Expr const &expr)
 {
     m_output.clear();
     expr.accept(*this);
-    return m_output;
+    return m_output.str();
 }
 
 void ASTCodeGenerator::visitBinary(BinaryExpr const &expr)
@@ -96,21 +95,21 @@ void ASTCodeGenerator::visitBinary(BinaryExpr const &expr)
     expr.m_left->accept(*this);
     expr.m_right->accept(*this);
 
-    m_output += "\tpop rax\n";
-    m_output += "\tpop rcx\n";
+    m_output << "\tpop rax\n";
+    m_output << "\tpop rcx\n";
     switch (expr.m_op.kind)
     {
     case TokenType::Plus:
-        m_output += "\tadd rax, rcx\n";
-        m_output += "\tpush rax\n";
+        m_output << "\tadd rax, rcx\n";
+        m_output << "\tpush rax\n";
         break;
     case TokenType::Minus:
-        m_output += "\tsub rcx, rax\n";
-        m_output += "\tpush rcx\n";
+        m_output << "\tsub rcx, rax\n";
+        m_output << "\tpush rcx\n";
         break;
     case TokenType::Star:
-        m_output += "\timul rax, rcx\n";
-        m_output += "\tpush rax\n";
+        m_output << "\timul rax, rcx\n";
+        m_output << "\tpush rax\n";
         break;
     case TokenType::Slash:
         // later
@@ -125,7 +124,7 @@ void ASTCodeGenerator::visitBinary(BinaryExpr const &expr)
 
 void ASTCodeGenerator::visitLiteral(LiteralExpr const &expr)
 {
-    m_output += "\tpush " + expr.m_literal.to_string() + "\n";
+    m_output << "\tpush " + expr.m_literal.to_string() + "\n";
 }
 
 void ASTCodeGenerator::visitUnary(UnaryExpr const &expr)
@@ -134,9 +133,9 @@ void ASTCodeGenerator::visitUnary(UnaryExpr const &expr)
     switch (expr.m_op.kind)
     {
     case TokenType::Minus:
-        m_output += "\tpop rax\n";
-        m_output += "\tneg rax\n";
-        m_output += "\tpush rax\n";
+        m_output << "\tpop rax\n";
+        m_output << "\tneg rax\n";
+        m_output << "\tpush rax\n";
         break;
     case TokenType::Bang:
         // later
