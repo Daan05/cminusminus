@@ -17,6 +17,10 @@ main:
 	push 6
 	push 3
 	pop rax
+	not rax
+	add rax, 1
+	push rax
+	pop rax
 	pop rcx
 	sub rcx, rax
 	push rcx

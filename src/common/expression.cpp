@@ -92,12 +92,8 @@ std::string ASTCodeGenerator::generate(Expr const &expr)
 
 void ASTCodeGenerator::visitBinary(BinaryExpr const &expr)
 {
-    // m_output += "(" + expr.m_op.lexeme + " ";
     expr.m_left->accept(*this);
-    // m_output += " ";
     expr.m_right->accept(*this);
-    // m_output += ")";
-    // std::cout << "binary\n";
 
     m_output += "\tpop rax\n";
     m_output += "\tpop rcx\n";
@@ -119,6 +115,7 @@ void ASTCodeGenerator::visitBinary(BinaryExpr const &expr)
         // later
         break;
     default:
+        // unreachable
         break;
     }
 }
@@ -130,9 +127,18 @@ void ASTCodeGenerator::visitLiteral(LiteralExpr const &expr)
 
 void ASTCodeGenerator::visitUnary(UnaryExpr const &expr)
 {
-    m_output += "(" + expr.m_op.lexeme + " ";
     expr.m_right->accept(*this);
-    m_output += ")";
+    switch (expr.m_op.kind)
+    {
+    case TokenType::Minus:
+        m_output += "\tpop rax\n";
+        m_output += "\tnot rax\n";
+        m_output += "\tadd rax, 1\n";
+        m_output += "\tpush rax\n";
+        break;
+    default:
+        break;
+    }
 }
 
 void ASTCodeGenerator::visitGrouping(GroupingExpr const &expr)

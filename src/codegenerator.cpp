@@ -33,7 +33,9 @@ std::string CodeGenerator::generate()
     // our expression result is saved on the stack
     m_output += "\tmov rdi, fmt ; 1st argument (format string)\n";
     m_output += "\tpop rsi ; 2nd argument (integer to print)\n";
-    m_output += "\txor eax, eax ; Clear RAX: required before calling variadic functions like printf\n";
+    m_output +=
+        "\txor eax, eax ; Clear RAX: required before calling variadic "
+        "functions like printf\n";
     m_output += "\tcall printf\n";
     m_output += "\tmov rax, 0 ; return value\n";
     m_output += "\tpop rbp ; Restore caller's base pointer\n";
