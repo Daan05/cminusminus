@@ -32,11 +32,13 @@ obj/%.cpp.o: %.cpp
 
 # Build and run the executable
 run: all
-	./obj/$(OUTPUT) test.cmm
+	@valgrind --log-file="valgrind.log" ./obj/c-- test.cmm
 
-compile: run
-	as -o test.o test.asm
-	gcc -o test test.o  
+# Assembles and runs the generated assembly file
+test: run
+	@nasm -f elf64 test.asm -o test.o && \
+	gcc -no-pie test.o -o test && \
+	./test
 
 # Remove object files and the final executable.
 .PHONY: clean

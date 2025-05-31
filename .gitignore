@@ -4,4 +4,3 @@ compile_commands.json
 valgrind.*
 test
 test.o
-test.asm

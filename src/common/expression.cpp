@@ -125,8 +125,7 @@ void ASTCodeGenerator::visitBinary(BinaryExpr const &expr)
 
 void ASTCodeGenerator::visitLiteral(LiteralExpr const &expr)
 {
-    m_output += "\tmov rax, " + expr.m_literal.to_string() + "\n";
-    m_output += "\tpush rax\n";
+    m_output += "\tpush " + expr.m_literal.to_string() + "\n";
 }
 
 void ASTCodeGenerator::visitUnary(UnaryExpr const &expr)
