@@ -1,5 +1,5 @@
 # Name of the executable
-OUTPUT = c--
+OUTPUT = c+
 
 # Cpp compiler
 CXX = g++
@@ -32,7 +32,7 @@ obj/%.cpp.o: %.cpp
 
 # Build and run the executable
 run: all
-	@valgrind --log-file="valgrind.log" ./obj/c-- test.cmm
+	@valgrind --log-file="valgrind.log" ./obj/$(OUTPUT) test.cp
 
 # Assembles and runs the generated assembly file
 test: run
