@@ -1,5 +1,6 @@
 #include "parser.hpp"
 
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -8,6 +9,7 @@
 #include "common/expression.hpp"
 #include "common/statements.hpp"
 #include "common/token.hpp"
+#include "visitors.hpp"
 
 Parser::Parser(std::vector<Token> tokens)
     : tokens(std::move(tokens)), current(0)
@@ -21,7 +23,8 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
     std::vector<std::unique_ptr<Stmt>> statements;
     while (!is_at_end())
     {
-        statements.push_back(parse_stmt());
+        auto stmt = parse_stmt();
+        statements.push_back(std::move(stmt));
     }
     return statements;
 }
@@ -50,7 +53,8 @@ std::unique_ptr<Stmt> Parser::parse_expr_stmt()
     return stmt;
 }
 
-std::unique_ptr<Expr> Parser::parse_expr() { return parse_equality(); }
+std::unique_ptr<Expr> Parser::parse_expr() { 
+    return parse_equality(); }
 
 std::unique_ptr<Expr> Parser::parse_equality()
 {

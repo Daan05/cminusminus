@@ -66,7 +66,7 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr const &expr)
         m_output << "\tpush rax\n";
         break;
     case TokenType::Slash:
-        // later
+        // TODO: add division
         break;
     default:
         throw std::runtime_error(
@@ -92,7 +92,7 @@ void ExprCodeGenerator::visit_unary_expr(UnaryExpr const &expr)
         m_output << "\tpush rax\n";
         break;
     case TokenType::Bang:
-        // later
+        // TODO: add bang
         break;
     default:
         throw std::runtime_error(

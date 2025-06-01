@@ -17,6 +17,7 @@ enum class TokenType
     Slash,
     Star,
     Comma,
+    Identifier,
     Dot,
     Number,
     String,
@@ -35,9 +36,12 @@ enum class TokenType
     Let,
     For,
     If,
+    Else,
     While,
     Print,
     Return,
+    True,
+    False,
     Eof,
 };
 

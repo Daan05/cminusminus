@@ -7,12 +7,23 @@
 #include "common/token.hpp"
 
 Lexer::Lexer(std::string const &source)
-    : source(source),
-      tokens({}),
+    : m_source(source),
+      m_tokens({}),
       m_current(0),
       m_line(1),
       m_line_start(m_current - 1)
 {
+    keywords["struct"] = TokenType::Struct;
+    keywords["else"] = TokenType::Else;
+    keywords["false"] = TokenType::False;
+    keywords["for"] = TokenType::For;
+    keywords["fn"] = TokenType::Fn;
+    keywords["if"] = TokenType::If;
+    keywords["print"] = TokenType::Print;
+    keywords["return"] = TokenType::Return;
+    keywords["true"] = TokenType::True;
+    keywords["let"] = TokenType::Let;
+    keywords["while"] = TokenType::While;
 }
 
 Lexer::~Lexer() {}
@@ -25,16 +36,16 @@ std::vector<Token> Lexer::lex()
         lex_token();
     }
 
-    tokens.push_back(
+    m_tokens.push_back(
         Token(TokenType::Eof, "", Literal(), m_line, m_start - m_line_start)
     );
 
-    return tokens;
+    return m_tokens;
 }
 
 void Lexer::lex_token()
 {
-    char c = source[m_current];
+    char c = m_source[m_current];
 
     m_current++;
 
@@ -68,7 +79,7 @@ void Lexer::lex_token()
         add_token(TokenType::Comma);
         break;
     case '.':
-        add_token(TokenType::Print);
+        add_token(TokenType::Dot);
         break;
     case ';':
         add_token(TokenType::SemiColon);
@@ -96,12 +107,16 @@ void Lexer::lex_token()
         {
             add_num_token();
         }
+        else if (std::isalpha(c) || c == '_')
+        {
+            add_ident_token();
+        }
         else
         {
-            // throw std::runtime_error(
-            std::cout << "line " + std::to_string(m_line) +
-                             ": Unexpected character (" + c + ").\n";
-            // );
+            throw std::runtime_error(
+                "line " + std::to_string(m_line) + ": Unexpected character (" +
+                c + ").\n"
+            );
             break;
         }
     }
@@ -109,43 +124,95 @@ void Lexer::lex_token()
 
 void Lexer::add_token(TokenType kind)
 {
-    std::string lexeme = source.substr(m_start, m_current - m_start);
-    tokens.push_back(
+    std::string lexeme = m_source.substr(m_start, m_current - m_start);
+    m_tokens.push_back(
         Token(kind, lexeme, Literal(), m_line, m_start - m_line_start)
     );
 }
 
 void Lexer::add_num_token()
 {
-    while (std::isdigit(source[m_current]))
+    while (std::isdigit(peek()))
     {
-        m_current++;
+        advance();
     }
 
-    if (source[m_current] == '.' && std::isdigit(source[m_current + 1]))
+    if (peek() == '.' && std::isdigit(peek_next()))
     {
-        m_current++;
+        advance();
 
-        while (std::isdigit(source[m_current]))
+        while (std::isdigit(peek()))
         {
-            m_current++;
+            advance();
         }
     }
 
-    std::string lexeme = source.substr(m_start, m_current - m_start);
+    std::string lexeme = m_source.substr(m_start, m_current - m_start);
     double num = std::stod(lexeme);
-    tokens.push_back(Token(
+    m_tokens.push_back(Token(
         TokenType::Number, lexeme, Literal(num), m_line, m_start - m_line_start
     ));
 }
 
-bool Lexer::is_at_end() { return m_current >= source.length(); }
+// TODO: give function body
+void Lexer::add_str_token() {}
+
+void Lexer::add_ident_token()
+{
+    char c = peek();
+    while (std::isdigit(c) || isalpha(c) || c == '_')
+    {
+        advance();
+        c = peek();
+    }
+
+    std::string lexeme = m_source.substr(m_start, m_current - m_start);
+    TokenType type;
+    if (keywords.contains(lexeme))
+    {
+        type = keywords[lexeme];
+    }
+    else
+    {
+        type = TokenType::Identifier;
+    }
+
+    m_tokens.push_back(
+        Token(type, lexeme, Literal(), m_line, m_start - m_line_start)
+    );
+}
+
+bool Lexer::is_at_end() { return m_current >= m_source.length(); }
+
+char Lexer::advance() { return m_source[m_current++]; }
 
 bool Lexer::match(char expected)
 {
-    if (is_at_end() || source[m_current] != expected)
+    if (is_at_end() || peek() != expected)
+    {
         return false;
+    }
 
     m_current++;
     return true;
+}
+
+char Lexer::peek()
+{
+    if (is_at_end())
+    {
+        return '\0';
+    }
+
+    return m_source[m_current];
+}
+
+char Lexer::peek_next()
+{
+    if (m_current + 1 >= m_source.length())
+    {
+        return '\0';
+    }
+
+    return m_source[m_current + 1];
 }
