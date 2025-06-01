@@ -1,4 +1,5 @@
 #include "visitors.hpp"
+#include <iostream>
 
 std::string ExprPrinter::print(Expr const &expr)
 {
@@ -94,8 +95,9 @@ void ExprCodeGenerator::visit_literal_expr(LiteralExpr const &expr)
 
 void ExprCodeGenerator::visit_var_expr(VarExpr const &expr)
 {
-    // TODO: ...
-    (void)expr;
+    (void) expr;
+    m_output << "\tmov rax, qword [rbp - 8]\n";
+    m_output << "\tpush rax\n";
 }
 
 void ExprCodeGenerator::visit_assign_expr(AssignExpr const &expr)
@@ -189,4 +191,13 @@ void StmtCodeGenerator::visit_var_stmt(VarStmt const &stmt)
 {
     // TODO: ...
     (void)stmt;
+
+    // give an offset to var
+    // increase offset
+    // assembly
+
+    ExprCodeGenerator exprCodeGenerator;
+    m_output << exprCodeGenerator.generate(*stmt.expr);
+    m_output << "\tpop rax\n";
+    m_output << "\tmov qword [rbp - 8], rax\n";
 }
