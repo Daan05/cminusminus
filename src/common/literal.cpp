@@ -15,7 +15,7 @@ Literal::~Literal() {}
 
 void Literal::print() const
 {
-    std::cout << " literal type:";
+    std::cout << "literal type:";
     switch (value.index())
     {
     case 0:  // std::monostate
@@ -23,11 +23,11 @@ void Literal::print() const
         break;
     case 1:  // std::string
         std::cout << " Str";
-        std::cout << " literal value: " << get<std::string>(value);
+        std::cout << ", literal value: " << get<std::string>(value);
         break;
     case 2:  // double
         std::cout << " Num";
-        std::cout << " literal value: " << get<double>(value);
+        std::cout << ", literal value: " << get<double>(value);
         break;
     }
 }
