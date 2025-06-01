@@ -45,7 +45,7 @@ enum class TokenType
     Eof,
 };
 
-std::string TT_to_string(TokenType kind);
+constexpr std::string TT_to_string(TokenType kind);
 
 struct Token
 {
