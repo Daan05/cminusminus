@@ -1,8 +1,10 @@
 #include "codegenerator.hpp"
-#include <memory>
 
-CodeGenerator::CodeGenerator(std::unique_ptr<Expr> expr)
-    : m_expr(std::move(expr))
+#include <memory>
+#include "visitors.hpp"
+
+CodeGenerator::CodeGenerator(std::vector<std::unique_ptr<Stmt>> statements)
+    : m_statements(std::move(statements))
 {
 }
 
@@ -12,9 +14,9 @@ std::string CodeGenerator::generate()
 {
     // start
     m_output << "section .data\n";
-    m_output
-        << "\tfmt db \"Result: %d\", 10, 0     ; printf format string (with "
-           "newline and null terminator)\n";
+    m_output << "\tfmt db \"%d\", 10, 0     ; printf format string "
+                "(with "
+                "newline and null terminator)\n";
     m_output << "\nsection .text\n";
     m_output << "\tglobal main\n";
     m_output << "\textern printf\n";
@@ -23,21 +25,13 @@ std::string CodeGenerator::generate()
     m_output << "\tmov rbp, rsp ; set up a new base pointer frame for this "
                 "function\n\n";
 
-    // our expression arithmetic
-    // walk tree
-    // ASTPrinter printer;
-    // m_output << "\t; " + printer.print(*m_expr) + '\n';
-    ASTCodeGenerator astCodeGenerator;
-    m_output << astCodeGenerator.generate(*m_expr);
+    StmtCodeGenerator stmtCodeGenerator;
+    for (auto const &stmt : m_statements)
+    {
+        m_output << stmtCodeGenerator.generate(*stmt);
+    }
 
-    // end
-    // our expression result is saved on the stack
-    m_output << "\n\tmov rdi, fmt ; 1st argument (format string)\n";
-    m_output << "\tpop rsi ; 2nd argument (integer to print)\n";
-    m_output << "\txor eax, eax ; Clear RAX: required before calling variadic "
-                "functions like printf\n";
-    m_output << "\tcall printf\n";
-    m_output << "\tmov rax, 0 ; return value\n";
+    m_output << "\n\tmov rax, 0 ; return value\n";
     m_output << "\tpop rbp ; Restore caller's base pointer\n";
     m_output << "\tret ; Return to caller (exit program)\n";
 

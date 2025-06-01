@@ -1,11 +1,12 @@
 #include "parser.hpp"
 
-#include <format>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "common/expression.hpp"
+#include "common/statements.hpp"
 #include "common/token.hpp"
 
 Parser::Parser(std::vector<Token> tokens)
@@ -15,7 +16,39 @@ Parser::Parser(std::vector<Token> tokens)
 
 Parser::~Parser() {}
 
-std::unique_ptr<Expr> Parser::parse() { return parse_expr(); }
+std::vector<std::unique_ptr<Stmt>> Parser::parse()
+{
+    std::vector<std::unique_ptr<Stmt>> statements;
+    while (!is_at_end())
+    {
+        statements.push_back(parse_stmt());
+    }
+    return statements;
+}
+
+std::unique_ptr<Stmt> Parser::parse_stmt()
+{
+    if (match({TokenType::Print}))
+        return parse_print_stmt();
+
+    return parse_expr_stmt();
+}
+
+std::unique_ptr<Stmt> Parser::parse_print_stmt()
+{
+    auto value = parse_expr();
+    consume(TokenType::SemiColon, "Expect ';' after value.");
+    auto stmt = std::make_unique<PrintStmt>(PrintStmt(std::move(value)));
+    return stmt;
+}
+
+std::unique_ptr<Stmt> Parser::parse_expr_stmt()
+{
+    auto expr = parse_expr();
+    consume(TokenType::SemiColon, "Expect ';' after expression.");
+    auto stmt = std::make_unique<ExprStmt>(ExprStmt(std::move(expr)));
+    return stmt;
+}
 
 std::unique_ptr<Expr> Parser::parse_expr() { return parse_equality(); }
 
@@ -110,12 +143,15 @@ std::unique_ptr<Expr> Parser::parse_primary()
     {
         Token paren = previous();  // Save left paren for line number
         auto expr = parse_expr();
-        consume(TokenType::RightParen, "Expect ')' after expression");
+        consume(
+            TokenType::RightParen, "line " + std::to_string(paren.line) +
+                                       ": Expect ')' after expression"
+        );
         return std::make_unique<GroupingExpr>(std::move(expr), paren.line);
     }
 
     throw std::runtime_error(
-        std::to_string(peek().line) + "Expected expression"
+        "line " + std::to_string(peek().line) + ": Expected expression"
     );
 }
 

@@ -2,19 +2,17 @@
 #define EXPRESSION_HPP
 
 #include <memory>
-#include <sstream>
-#include <string>
 
 #include "token.hpp"
 
-class Visitor
+class ExprVisitor
 {
    public:
-    virtual ~Visitor() = default;
-    virtual void visitBinary(const class BinaryExpr &expr) = 0;
-    virtual void visitLiteral(const class LiteralExpr &expr) = 0;
-    virtual void visitUnary(const class UnaryExpr &expr) = 0;
-    virtual void visitGrouping(const class GroupingExpr &expr) = 0;
+    virtual ~ExprVisitor() = default;
+    virtual void visit_binary_expr(class BinaryExpr const &expr) = 0;
+    virtual void visit_literal_expr(class LiteralExpr const &expr) = 0;
+    virtual void visit_unary_expr(class UnaryExpr const &expr) = 0;
+    virtual void visit_grouping_expr(class GroupingExpr const &expr) = 0;
 };
 
 class Expr
@@ -22,7 +20,7 @@ class Expr
    public:
     virtual ~Expr() = default;
     int get_line() const;
-    virtual void accept(Visitor &visitor) const = 0;
+    virtual void accept(ExprVisitor &visitor) const = 0;
 
     int m_line;
 
@@ -38,7 +36,7 @@ class BinaryExpr : public Expr
         int line
     );
 
-    void accept(Visitor &visitor) const override;
+    void accept(ExprVisitor &visitor) const override;
 
     std::unique_ptr<Expr> m_left;
     Token m_op;
@@ -50,7 +48,7 @@ class LiteralExpr : public Expr
    public:
     LiteralExpr(Literal literal, int line);
 
-    void accept(Visitor &visitor) const override;
+    void accept(ExprVisitor &visitor) const override;
 
     Literal m_literal;
 };
@@ -60,7 +58,7 @@ class UnaryExpr : public Expr
    public:
     UnaryExpr(Token op, std::unique_ptr<Expr> right, int line);
 
-    void accept(Visitor &visitor) const override;
+    void accept(ExprVisitor &visitor) const override;
 
     Token m_op;
     std::unique_ptr<Expr> m_right;
@@ -71,35 +69,9 @@ class GroupingExpr : public Expr
    public:
     GroupingExpr(std::unique_ptr<Expr> expr, int line);
 
-    void accept(Visitor &visitor) const override;
+    void accept(ExprVisitor &visitor) const override;
 
     std::unique_ptr<Expr> m_expr;
-};
-
-class ASTPrinter : public Visitor
-{
-   public:
-    std::string print(Expr const &expr);
-    void visitBinary(BinaryExpr const &expr) override;
-    void visitLiteral(LiteralExpr const &expr) override;
-    void visitUnary(UnaryExpr const &expr) override;
-    void visitGrouping(GroupingExpr const &expr) override;
-
-   private:
-    std::ostringstream m_output;
-};
-
-class ASTCodeGenerator : public Visitor
-{
-   public:
-    std::string generate(Expr const &expr);
-    void visitBinary(BinaryExpr const &expr) override;
-    void visitLiteral(LiteralExpr const &expr) override;
-    void visitUnary(UnaryExpr const &expr) override;
-    void visitGrouping(GroupingExpr const &expr) override;
-
-private:
-    std::ostringstream m_output;
 };
 
 #endif

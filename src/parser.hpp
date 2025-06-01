@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include "common/expression.hpp"
+#include "common/statements.hpp"
 #include "common/token.hpp"
 
 class Parser
@@ -13,13 +14,17 @@ class Parser
     Parser(std::vector<Token> tokens);
     ~Parser();
 
-    std::unique_ptr<Expr> parse();
+    std::vector<std::unique_ptr<Stmt>> parse();
 
    private:
     std::vector<Token> tokens;
     size_t current;
 
    private:
+    std::unique_ptr<Stmt> parse_stmt();
+    std::unique_ptr<Stmt> parse_print_stmt();
+    std::unique_ptr<Stmt> parse_expr_stmt();
+
     std::unique_ptr<Expr> parse_expr();
     std::unique_ptr<Expr> parse_equality();
     std::unique_ptr<Expr> parse_comparison();

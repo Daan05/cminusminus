@@ -8,6 +8,7 @@
 #include "common/token.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "visitors.hpp"
 
 #define DEBUG_TOKENS 0
 #define DEBUG_AST 0
@@ -37,14 +38,17 @@ try
 #endif
 
     Parser parser(tokens);
-    std::unique_ptr<Expr> expressions = parser.parse();
+    std::vector<std::unique_ptr<Stmt>> statements = parser.parse();
 
 #if DEBUG_AST
-    ASTPrinter printer;
-    std::cout << printer.print(*expressions);
+    StmtPrinter stmtPrinter;
+    for (auto const &stmt : statements)
+    {
+        std::cout << stmtPrinter.print(*stmt);
+    }
 #endif
 
-    CodeGenerator generator(std::move(expressions));
+    CodeGenerator generator(std::move(statements));
     std::string asm_code = generator.generate();
 
     common::write_file("test.asm", asm_code);

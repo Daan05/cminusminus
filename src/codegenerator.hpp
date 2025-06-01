@@ -3,19 +3,20 @@
 
 #include <memory>
 #include <sstream>
+#include <vector>
 
-#include "common/expression.hpp"
+#include "common/statements.hpp"
 
 class CodeGenerator
 {
    public:
-    CodeGenerator(std::unique_ptr<Expr> expr);
+    CodeGenerator(std::vector<std::unique_ptr<Stmt>> statements);
     ~CodeGenerator();
 
     std::string generate();
 
    private:
-    std::unique_ptr<Expr> m_expr;
+    std::vector<std::unique_ptr<Stmt>> m_statements;
     std::ostringstream m_output;
 
    private:

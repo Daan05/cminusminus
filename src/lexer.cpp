@@ -1,7 +1,6 @@
 #include "lexer.hpp"
 
 #include <cctype>
-#include <stdexcept>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -69,7 +68,10 @@ void Lexer::lex_token()
         add_token(TokenType::Comma);
         break;
     case '.':
-        add_token(TokenType::Dot);
+        add_token(TokenType::Print);
+        break;
+    case ';':
+        add_token(TokenType::SemiColon);
         break;
     case '!':
         add_token(match('=') ? TokenType::BangEqual : TokenType::Bang);
@@ -141,9 +143,7 @@ bool Lexer::is_at_end() { return m_current >= source.length(); }
 
 bool Lexer::match(char expected)
 {
-    if (is_at_end())
-        return false;
-    if (source[m_current] != expected)
+    if (is_at_end() || source[m_current] != expected)
         return false;
 
     m_current++;
