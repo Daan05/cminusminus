@@ -19,7 +19,18 @@ void ExprPrinter::visit_binary_expr(BinaryExpr const &expr)
 
 void ExprPrinter::visit_literal_expr(LiteralExpr const &expr)
 {
-    m_output << expr.m_literal.to_string();
+    m_output << expr.token.literal.to_string();
+}
+
+void ExprPrinter::visit_var_expr(VarExpr const &expr)
+{
+    m_output << expr.token.lexeme;
+}
+
+void ExprPrinter::visit_assign_expr(AssignExpr const &expr)
+{
+    // TODO: ...
+    (void)expr;
 }
 
 void ExprPrinter::visit_unary_expr(UnaryExpr const &expr)
@@ -78,7 +89,19 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr const &expr)
 
 void ExprCodeGenerator::visit_literal_expr(LiteralExpr const &expr)
 {
-    m_output << "\tpush " + expr.m_literal.to_string() + "\n";
+    m_output << "\tpush " + expr.token.literal.to_string() + "\n";
+}
+
+void ExprCodeGenerator::visit_var_expr(VarExpr const &expr)
+{
+    // TODO: ...
+    (void)expr;
+}
+
+void ExprCodeGenerator::visit_assign_expr(AssignExpr const &expr)
+{
+    // TODO: ...
+    (void)expr;
 }
 
 void ExprCodeGenerator::visit_unary_expr(UnaryExpr const &expr)
@@ -129,6 +152,14 @@ void StmtPrinter::visit_expr_stmt(ExprStmt const &stmt)
     m_output << exprPrinter.print(*stmt.expr) << '\n';
 }
 
+void StmtPrinter::visit_var_stmt(VarStmt const &stmt)
+{
+    m_output << "VAR: ";
+    m_output << stmt.token.lexeme << " = ";
+    ExprPrinter exprPrinter;
+    m_output << exprPrinter.print(*stmt.expr) << '\n';
+}
+
 std::string StmtCodeGenerator::generate(Stmt const &stmt)
 {
     m_output.clear();
@@ -142,13 +173,20 @@ void StmtCodeGenerator::visit_print_stmt(PrintStmt const &stmt)
     ExprCodeGenerator exprCodeGenerator;
     m_output << exprCodeGenerator.generate(*stmt.expr);
     m_output << "\tmov rdi, fmt ; 1st argument (format string)\n";
-	m_output << "\tpop rsi ; 2nd argument (integer to print)\n";
-	m_output << "\txor eax, eax ; Clear RAX: required before calling variadic functions like printf\n";
-	m_output << "\tcall printf\n";
+    m_output << "\tpop rsi ; 2nd argument (integer to print)\n";
+    m_output << "\txor eax, eax ; Clear RAX: required before calling variadic "
+                "functions like printf\n";
+    m_output << "\tcall printf\n";
 }
 
 void StmtCodeGenerator::visit_expr_stmt(ExprStmt const &stmt)
 {
     ExprCodeGenerator exprCodeGenerator;
     m_output << exprCodeGenerator.generate(*stmt.expr);
+}
+
+void StmtCodeGenerator::visit_var_stmt(VarStmt const &stmt)
+{
+    // TODO: ...
+    (void)stmt;
 }

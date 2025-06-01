@@ -21,10 +21,14 @@ class Parser
     size_t current;
 
    private:
+    std::unique_ptr<Stmt> parse_decl();
+    std::unique_ptr<Stmt> parse_var_decl();
+
     std::unique_ptr<Stmt> parse_stmt();
     std::unique_ptr<Stmt> parse_print_stmt();
     std::unique_ptr<Stmt> parse_expr_stmt();
 
+    std::unique_ptr<Expr> parse_assignment();
     std::unique_ptr<Expr> parse_expr();
     std::unique_ptr<Expr> parse_equality();
     std::unique_ptr<Expr> parse_comparison();

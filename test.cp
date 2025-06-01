@@ -1,3 +1,7 @@
+let a = 3;
+a = 42;
+print a;
+
 print 42;
 print -23 + -1;
 print (54 - 45);
