@@ -5,13 +5,22 @@
 
 #include "token.hpp"
 
-class ExprVisitor
+struct Var
+{
+    Var(Token token, int offset);
+    ~Var() = default;
+
+    Token token;
+    int rbp_offset;
+};
+
+struct ExprVisitor
 {
    public:
     virtual ~ExprVisitor() = default;
     virtual void visit_binary_expr(struct BinaryExpr const &expr) = 0;
     virtual void visit_literal_expr(struct LiteralExpr const &expr) = 0;
-    virtual void visit_var_expr(struct VarExpr const &expr) = 0;
+    virtual void visit_var_decl_expr(struct VarExpr const &expr) = 0;
     virtual void visit_assign_expr(struct AssignExpr const &expr) = 0;
     virtual void visit_unary_expr(struct UnaryExpr const &expr) = 0;
     virtual void visit_grouping_expr(struct GroupingExpr const &expr) = 0;
@@ -58,21 +67,21 @@ struct LiteralExpr : public Expr
 struct VarExpr : public Expr
 {
    public:
-    VarExpr(Token token, int line);
+    VarExpr(Token token, int offset, int line);
 
     void accept(ExprVisitor &visitor) const override;
 
-    Token token;
+    Var var;
 };
 
 struct AssignExpr : public Expr
 {
    public:
-    AssignExpr(Token token, std::unique_ptr<Expr> expr, int line);
+    AssignExpr(Var var, std::unique_ptr<Expr> expr, int line);
 
     void accept(ExprVisitor &visitor) const override;
 
-    Token token;
+    Var var;
     std::unique_ptr<Expr> m_expr;
 };
 

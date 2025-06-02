@@ -4,11 +4,14 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "common/expression.hpp"
 #include "common/statements.hpp"
 #include "common/token.hpp"
+
+static int rbp_offset = 8;
 
 Parser::Parser(std::vector<Token> tokens)
     : tokens(std::move(tokens)), current(0)
@@ -17,7 +20,9 @@ Parser::Parser(std::vector<Token> tokens)
 
 Parser::~Parser() {}
 
-std::vector<std::unique_ptr<Stmt>> Parser::parse()
+std::pair<
+    std::vector<std::unique_ptr<Stmt>>, std::unordered_map<std::string, size_t>>
+Parser::parse()
 {
     std::vector<std::unique_ptr<Stmt>> statements;
     while (!is_at_end())
@@ -28,7 +33,7 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
             statements.push_back(std::move(stmt));
         }
     }
-    return statements;
+    return {std::move(statements), variables};
 }
 
 std::unique_ptr<Stmt> Parser::parse_decl()
@@ -44,8 +49,8 @@ std::unique_ptr<Stmt> Parser::parse_decl()
     }
     catch (std::runtime_error const &err)
     {
+        std::cout << err.what() << '\n';
         synchronize();
-        std::cout << "synchronize...\n";
         return nullptr;
     }
 }
@@ -61,9 +66,20 @@ std::unique_ptr<Stmt> Parser::parse_var_decl()
     }
 
     consume(TokenType::SemiColon, "Expect ';' after variable declaration.");
+
+    if (variables.contains(token.lexeme))
+    {
+        throw std::runtime_error("Can't redefine variable");
+    }
+    else
+    {
+        variables[token.lexeme] = rbp_offset;
+    }
+
     auto stmt = std::make_unique<VarStmt>(
-        VarStmt(std::move(token), std::move(initializer))
+        VarStmt(Var(token, rbp_offset), std::move(initializer))
     );
+    rbp_offset += 8;
     return stmt;
 }
 
@@ -104,20 +120,27 @@ std::unique_ptr<Expr> Parser::parse_assignment()
 
         if (auto *var_expr = dynamic_cast<VarExpr *>(expr.get()))
         {
-            Token name = var_expr->token;
-            return std::make_unique<AssignExpr>(
-                name, std::move(value), name.line
-            );
+            Token name = var_expr->var.token;
+            if (variables.contains(name.lexeme))
+            {
+                return std::make_unique<AssignExpr>(
+                    Var(name, variables[name.lexeme]), std::move(value),
+                    name.line
+                );
+            }
+            else
+            {
+                throw std::runtime_error("Undefined variable");
+            }
         }
 
-        // TODO: error
-        // error(equals, "Invalid assignment target.");
+        throw std::runtime_error("Invalid assignment target.");
     }
 
     return expr;
 }
 
-std::unique_ptr<Expr> Parser::parse_expr() { return parse_equality(); }
+std::unique_ptr<Expr> Parser::parse_expr() { return parse_assignment(); }
 
 std::unique_ptr<Expr> Parser::parse_equality()
 {
@@ -209,7 +232,16 @@ std::unique_ptr<Expr> Parser::parse_primary()
     if (match({TokenType::Identifier}))
     {
         Token token = previous();
-        return std::make_unique<VarExpr>(token, token.line);
+        if (variables.contains(token.lexeme))
+        {
+            return std::make_unique<VarExpr>(
+                token, variables[token.lexeme], token.line
+            );
+        }
+        else
+        {
+            throw std::runtime_error("Undefined variable");
+        }
     }
 
     if (match({TokenType::LeftParen}))
@@ -230,6 +262,7 @@ std::unique_ptr<Expr> Parser::parse_primary()
 
 void Parser::synchronize()
 {
+    std::cout << "line: " << peek().line << " synchronize\n";
     advance();
 
     while (!is_at_end())

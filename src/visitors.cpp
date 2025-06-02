@@ -1,5 +1,6 @@
 #include "visitors.hpp"
 #include <iostream>
+#include <string>
 
 std::string ExprPrinter::print(Expr const &expr)
 {
@@ -23,15 +24,15 @@ void ExprPrinter::visit_literal_expr(LiteralExpr const &expr)
     m_output << expr.token.literal.to_string();
 }
 
-void ExprPrinter::visit_var_expr(VarExpr const &expr)
+void ExprPrinter::visit_var_decl_expr(VarExpr const &expr)
 {
-    m_output << expr.token.lexeme;
+    m_output << expr.var.token.lexeme;
 }
 
 void ExprPrinter::visit_assign_expr(AssignExpr const &expr)
 {
-    // TODO: ...
-    (void)expr;
+    m_output << expr.var.token.lexeme << " = ";
+    expr.m_expr->accept(*this);
 }
 
 void ExprPrinter::visit_unary_expr(UnaryExpr const &expr)
@@ -90,20 +91,20 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr const &expr)
 
 void ExprCodeGenerator::visit_literal_expr(LiteralExpr const &expr)
 {
-    m_output << "\tpush " + expr.token.literal.to_string() + "\n";
+    m_output << "\tpush " << expr.token.literal.to_string() << "\n";
 }
 
-void ExprCodeGenerator::visit_var_expr(VarExpr const &expr)
+void ExprCodeGenerator::visit_var_decl_expr(VarExpr const &expr)
 {
-    (void) expr;
-    m_output << "\tmov rax, qword [rbp - 8]\n";
+    m_output << "\tmov rax, qword [rbp - " << expr.var.rbp_offset << "]\n";
     m_output << "\tpush rax\n";
 }
 
 void ExprCodeGenerator::visit_assign_expr(AssignExpr const &expr)
 {
-    // TODO: ...
-    (void)expr;
+    expr.m_expr->accept(*this);
+    m_output << "\tpop rax\n";
+    m_output << "\tmov qword [rbp - " << expr.var.rbp_offset << "], rax\n";
 }
 
 void ExprCodeGenerator::visit_unary_expr(UnaryExpr const &expr)
@@ -156,8 +157,8 @@ void StmtPrinter::visit_expr_stmt(ExprStmt const &stmt)
 
 void StmtPrinter::visit_var_stmt(VarStmt const &stmt)
 {
-    m_output << "VAR: ";
-    m_output << stmt.token.lexeme << " = ";
+    m_output << "VAR DECL: ";
+    m_output << "let " << stmt.var.token.lexeme << " = ";
     ExprPrinter exprPrinter;
     m_output << exprPrinter.print(*stmt.expr) << '\n';
 }
@@ -189,15 +190,8 @@ void StmtCodeGenerator::visit_expr_stmt(ExprStmt const &stmt)
 
 void StmtCodeGenerator::visit_var_stmt(VarStmt const &stmt)
 {
-    // TODO: ...
-    (void)stmt;
-
-    // give an offset to var
-    // increase offset
-    // assembly
-
     ExprCodeGenerator exprCodeGenerator;
     m_output << exprCodeGenerator.generate(*stmt.expr);
     m_output << "\tpop rax\n";
-    m_output << "\tmov qword [rbp - 8], rax\n";
+    m_output << "\tmov qword [rbp - " << stmt.var.rbp_offset << "], rax\n";
 }

@@ -42,10 +42,10 @@ struct PrintStmt : public Stmt
 struct VarStmt : public Stmt
 {
    public:
-    VarStmt(Token token, std::unique_ptr<Expr> expr);
+    VarStmt(Var var, std::unique_ptr<Expr> expr);
     void accept(StmtVisitor &visitor) const override;
 
-    Token token;
+    Var var;
     std::unique_ptr<Expr> expr;
 };
 

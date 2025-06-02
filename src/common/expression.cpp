@@ -1,9 +1,14 @@
 #include "expression.hpp"
 
+#include <iostream>
 #include <memory>
-#include <utility>
 
 #include "token.hpp"
+
+Var::Var(Token token, int offset) : token(token), rbp_offset(offset)
+{
+    // std::cout << offset << '\n';
+};
 
 Expr::Expr(int line) : m_line(line) {}
 
@@ -32,15 +37,18 @@ void LiteralExpr::accept(ExprVisitor &visitor) const
     visitor.visit_literal_expr(*this);
 }
 
-VarExpr::VarExpr(Token token, int line) : Expr(line), token(std::move(token)) {}
+VarExpr::VarExpr(Token token, int offset, int line)
+    : Expr(line), var(std::move(Var(std::move(token), offset)))
+{
+}
 
 void VarExpr::accept(ExprVisitor &visitor) const
 {
     visitor.visit_var_expr(*this);
 }
 
-AssignExpr::AssignExpr(Token token, std::unique_ptr<Expr> expr, int line)
-    : Expr(line), token(token), m_expr(std::move(expr))
+AssignExpr::AssignExpr(Var var, std::unique_ptr<Expr> expr, int line)
+    : Expr(line), var(std::move(var)), m_expr(std::move(expr))
 {
 }
 

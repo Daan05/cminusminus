@@ -43,6 +43,7 @@ std::vector<Token> Lexer::lex()
     return m_tokens;
 }
 
+// TODO: add comments
 void Lexer::lex_token()
 {
     char c = m_source[m_current];

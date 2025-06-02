@@ -10,7 +10,7 @@
 #include "visitors.hpp"
 
 #define DEBUG_TOKENS 0
-#define DEBUG_AST 1
+#define DEBUG_AST 0
 
 int main(int argc, char **argv)
 try
@@ -37,11 +37,11 @@ try
 #endif
 
     Parser parser(tokens);
-    std::vector<std::unique_ptr<Stmt>> statements = parser.parse();
+    auto statements = parser.parse();
 
 #if DEBUG_AST
     StmtPrinter stmtPrinter;
-    for (auto const &stmt : statements)
+    for (auto const &stmt : statements.first)
     {
         std::cout << stmtPrinter.print(*stmt);
     }
