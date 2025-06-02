@@ -2,11 +2,13 @@
 OUTPUT = c+
 
 # Cpp compiler
-CXX = g++
+CXX = ccache g++
 
 # Cpp flags
 CXXFLAGS = \
-	-O2 \
+	-O3 \
+	-g \
+	-rdynamic \
 	-Wall \
 	-Wextra \
 	-Werror \
@@ -17,7 +19,8 @@ SRCFILES := $(shell find -L * -type f | LC_ALL=C sort)
 CPPFILES := $(filter %.cpp,$(SRCFILES))
 OBJ := $(addprefix obj/,$(CPPFILES:.cpp=.cpp.o))
 
-.PHONY: all
+.PHONY: all run test clean
+
 all: obj/$(OUTPUT)
 
 # Link rules for the final executable.

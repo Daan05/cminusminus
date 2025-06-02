@@ -37,22 +37,19 @@ Parser::parse()
 }
 
 std::unique_ptr<Stmt> Parser::parse_decl()
+try
 {
-    try
+    if (match({TokenType::Let}))
     {
-        if (match({TokenType::Let}))
-        {
-            return parse_var_decl();
-        }
+        return parse_var_decl();
+    }
 
-        return parse_stmt();
-    }
-    catch (std::runtime_error const &err)
-    {
-        std::cout << err.what() << '\n';
-        synchronize();
-        return nullptr;
-    }
+    return parse_stmt();
+}
+catch (std::runtime_error const &err)
+{
+    synchronize();
+    return nullptr;
 }
 
 std::unique_ptr<Stmt> Parser::parse_var_decl()

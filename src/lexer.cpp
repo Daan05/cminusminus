@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "common/error.hpp"
 #include "common/token.hpp"
 
 Lexer::Lexer(std::string const &source)
@@ -114,9 +115,8 @@ void Lexer::lex_token()
         }
         else
         {
-            throw std::runtime_error(
-                "line " + std::to_string(m_line) + ": Unexpected character (" +
-                c + ").\n"
+            error::report(
+                m_line, "Unexpected character (" + std::to_string(c) + ").\n"
             );
             break;
         }
@@ -155,8 +155,10 @@ void Lexer::add_num_token()
     ));
 }
 
-// TODO: give function body
-void Lexer::add_str_token() {}
+void Lexer::add_str_token()
+{
+    error::todo("Lexer::add_str_token(): give function body");
+}
 
 void Lexer::add_ident_token()
 {

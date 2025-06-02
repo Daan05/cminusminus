@@ -1,4 +1,7 @@
 #include "visitors.hpp"
+
+#include "common/error.hpp"
+
 #include <iostream>
 #include <string>
 
@@ -79,12 +82,13 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr const &expr)
         m_output << "\tpush rax\n";
         break;
     case TokenType::Slash:
-        // TODO: add division
+        error::todo(
+            "ExprCodeGenerator::visit_binary_expr(): add support for "
+            "division"
+        );
         break;
     default:
-        throw std::runtime_error(
-            "unreachable code: ASTCodeGenerator::visitBinary()"
-        );
+        error::unreachable();
         break;
     }
 }
@@ -118,12 +122,10 @@ void ExprCodeGenerator::visit_unary_expr(UnaryExpr const &expr)
         m_output << "\tpush rax\n";
         break;
     case TokenType::Bang:
-        // TODO: add bang
+        error::todo("ExprCodeGenerator::visit_unary_expr: add bang");
         break;
     default:
-        throw std::runtime_error(
-            "unreachable code: ASTCodeGenerator::visitUnary()"
-        );
+        error::unreachable();
         break;
     }
 }

@@ -2,6 +2,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "common/error.hpp"
 #include "codegenerator.hpp"
 #include "common/common.hpp"
 #include "common/token.hpp"
@@ -15,11 +16,10 @@
 int main(int argc, char **argv)
 try
 {
+    // TODO: properly handle input
     if (argc < 2)
     {
-        throw std::runtime_error(
-            "c--: \x1B[31mfatal error: \033[0mno input files"
-        );
+        error::fatal("c--: \x1B[31mfatal error: \033[0mno input files");
     }
 
     std::string source = common::read_file(argv[1]);
