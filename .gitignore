@@ -5,3 +5,4 @@ valgrind.*
 test
 test.o
 test.asm
+test2.cp

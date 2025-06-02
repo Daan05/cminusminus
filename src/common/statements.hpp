@@ -5,22 +5,23 @@
 
 #include "expression.hpp"
 
-class StmtVisitor
+struct StmtVisitor
 {
    public:
     virtual ~StmtVisitor() = default;
-    virtual void visit_expr_stmt(class ExprStmt const &stmt) = 0;
-    virtual void visit_print_stmt(class PrintStmt const &stmt) = 0;
+    virtual void visit_expr_stmt(struct ExprStmt const &stmt) = 0;
+    virtual void visit_print_stmt(struct PrintStmt const &stmt) = 0;
+    virtual void visit_var_stmt(struct VarStmt const &stmt) = 0;
 };
 
-class Stmt
+struct Stmt
 {
    public:
     virtual ~Stmt() = default;
     virtual void accept(StmtVisitor &visitor) const = 0;
 };
 
-class ExprStmt : public Stmt
+struct ExprStmt : public Stmt
 {
    public:
     ExprStmt(std::unique_ptr<Expr> expr);
@@ -29,12 +30,22 @@ class ExprStmt : public Stmt
     std::unique_ptr<Expr> expr;
 };
 
-class PrintStmt : public Stmt
+struct PrintStmt : public Stmt
 {
    public:
     PrintStmt(std::unique_ptr<Expr> expr);
     void accept(StmtVisitor &visitor) const override;
 
+    std::unique_ptr<Expr> expr;
+};
+
+struct VarStmt : public Stmt
+{
+   public:
+    VarStmt(Var var, std::unique_ptr<Expr> expr);
+    void accept(StmtVisitor &visitor) const override;
+
+    Var var;
     std::unique_ptr<Expr> expr;
 };
 

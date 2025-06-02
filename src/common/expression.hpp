@@ -5,17 +5,28 @@
 
 #include "token.hpp"
 
-class ExprVisitor
+struct Var
+{
+    Var(Token token, int offset);
+    ~Var() = default;
+
+    Token token;
+    int rbp_offset;
+};
+
+struct ExprVisitor
 {
    public:
     virtual ~ExprVisitor() = default;
-    virtual void visit_binary_expr(class BinaryExpr const &expr) = 0;
-    virtual void visit_literal_expr(class LiteralExpr const &expr) = 0;
-    virtual void visit_unary_expr(class UnaryExpr const &expr) = 0;
-    virtual void visit_grouping_expr(class GroupingExpr const &expr) = 0;
+    virtual void visit_binary_expr(struct BinaryExpr const &expr) = 0;
+    virtual void visit_literal_expr(struct LiteralExpr const &expr) = 0;
+    virtual void visit_var_decl_expr(struct VarExpr const &expr) = 0;
+    virtual void visit_assign_expr(struct AssignExpr const &expr) = 0;
+    virtual void visit_unary_expr(struct UnaryExpr const &expr) = 0;
+    virtual void visit_grouping_expr(struct GroupingExpr const &expr) = 0;
 };
 
-class Expr
+struct Expr
 {
    public:
     virtual ~Expr() = default;
@@ -28,7 +39,7 @@ class Expr
     Expr(int line);
 };
 
-class BinaryExpr : public Expr
+struct BinaryExpr : public Expr
 {
    public:
     BinaryExpr(
@@ -43,17 +54,38 @@ class BinaryExpr : public Expr
     std::unique_ptr<Expr> m_right;
 };
 
-class LiteralExpr : public Expr
+struct LiteralExpr : public Expr
 {
    public:
-    LiteralExpr(Literal literal, int line);
+    LiteralExpr(Token token, int line);
 
     void accept(ExprVisitor &visitor) const override;
 
-    Literal m_literal;
+    Token token;
 };
 
-class UnaryExpr : public Expr
+struct VarExpr : public Expr
+{
+   public:
+    VarExpr(Token token, int offset, int line);
+
+    void accept(ExprVisitor &visitor) const override;
+
+    Var var;
+};
+
+struct AssignExpr : public Expr
+{
+   public:
+    AssignExpr(Var var, std::unique_ptr<Expr> expr, int line);
+
+    void accept(ExprVisitor &visitor) const override;
+
+    Var var;
+    std::unique_ptr<Expr> m_expr;
+};
+
+struct UnaryExpr : public Expr
 {
    public:
     UnaryExpr(Token op, std::unique_ptr<Expr> right, int line);
@@ -64,7 +96,7 @@ class UnaryExpr : public Expr
     std::unique_ptr<Expr> m_right;
 };
 
-class GroupingExpr : public Expr
+struct GroupingExpr : public Expr
 {
    public:
     GroupingExpr(std::unique_ptr<Expr> expr, int line);

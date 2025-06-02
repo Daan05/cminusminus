@@ -4,12 +4,14 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "common/expression.hpp"
 #include "common/statements.hpp"
 #include "common/token.hpp"
-#include "visitors.hpp"
+
+static int rbp_offset = 8;
 
 Parser::Parser(std::vector<Token> tokens)
     : tokens(std::move(tokens)), current(0)
@@ -18,21 +20,75 @@ Parser::Parser(std::vector<Token> tokens)
 
 Parser::~Parser() {}
 
-std::vector<std::unique_ptr<Stmt>> Parser::parse()
+std::pair<
+    std::vector<std::unique_ptr<Stmt>>, std::unordered_map<std::string, size_t>>
+Parser::parse()
 {
     std::vector<std::unique_ptr<Stmt>> statements;
     while (!is_at_end())
     {
-        auto stmt = parse_stmt();
-        statements.push_back(std::move(stmt));
+        auto stmt = parse_decl();
+        if (stmt)
+        {
+            statements.push_back(std::move(stmt));
+        }
     }
-    return statements;
+    return {std::move(statements), variables};
+}
+
+std::unique_ptr<Stmt> Parser::parse_decl()
+{
+    try
+    {
+        if (match({TokenType::Let}))
+        {
+            return parse_var_decl();
+        }
+
+        return parse_stmt();
+    }
+    catch (std::runtime_error const &err)
+    {
+        std::cout << err.what() << '\n';
+        synchronize();
+        return nullptr;
+    }
+}
+
+std::unique_ptr<Stmt> Parser::parse_var_decl()
+{
+    Token token = consume(TokenType::Identifier, "Expect variable name.");
+
+    std::unique_ptr<Expr> initializer;
+    if (match({TokenType::Equal}))
+    {
+        initializer = parse_expr();
+    }
+
+    consume(TokenType::SemiColon, "Expect ';' after variable declaration.");
+
+    if (variables.contains(token.lexeme))
+    {
+        throw std::runtime_error("Can't redefine variable");
+    }
+    else
+    {
+        variables[token.lexeme] = rbp_offset;
+    }
+
+    auto stmt = std::make_unique<VarStmt>(
+        VarStmt(Var(token, rbp_offset), std::move(initializer))
+    );
+    rbp_offset += 8;
+    return stmt;
 }
 
 std::unique_ptr<Stmt> Parser::parse_stmt()
 {
     if (match({TokenType::Print}))
+    {
         return parse_print_stmt();
+    }
 
     return parse_expr_stmt();
 }
@@ -53,8 +109,38 @@ std::unique_ptr<Stmt> Parser::parse_expr_stmt()
     return stmt;
 }
 
-std::unique_ptr<Expr> Parser::parse_expr() { 
-    return parse_equality(); }
+std::unique_ptr<Expr> Parser::parse_assignment()
+{
+    auto expr = parse_equality();
+
+    if (match({TokenType::Equal}))
+    {
+        Token equals = previous();
+        auto value = parse_assignment();
+
+        if (auto *var_expr = dynamic_cast<VarExpr *>(expr.get()))
+        {
+            Token name = var_expr->var.token;
+            if (variables.contains(name.lexeme))
+            {
+                return std::make_unique<AssignExpr>(
+                    Var(name, variables[name.lexeme]), std::move(value),
+                    name.line
+                );
+            }
+            else
+            {
+                throw std::runtime_error("Undefined variable");
+            }
+        }
+
+        throw std::runtime_error("Invalid assignment target.");
+    }
+
+    return expr;
+}
+
+std::unique_ptr<Expr> Parser::parse_expr() { return parse_assignment(); }
 
 std::unique_ptr<Expr> Parser::parse_equality()
 {
@@ -140,7 +226,22 @@ std::unique_ptr<Expr> Parser::parse_primary()
     if (match({TokenType::Number, TokenType::String}))
     {
         Token token = previous();
-        return std::make_unique<LiteralExpr>(token.literal, token.line);
+        return std::make_unique<LiteralExpr>(token, token.line);
+    }
+
+    if (match({TokenType::Identifier}))
+    {
+        Token token = previous();
+        if (variables.contains(token.lexeme))
+        {
+            return std::make_unique<VarExpr>(
+                token, variables[token.lexeme], token.line
+            );
+        }
+        else
+        {
+            throw std::runtime_error("Undefined variable");
+        }
     }
 
     if (match({TokenType::LeftParen}))
@@ -161,12 +262,15 @@ std::unique_ptr<Expr> Parser::parse_primary()
 
 void Parser::synchronize()
 {
+    std::cout << "line: " << peek().line << " synchronize\n";
     advance();
 
     while (!is_at_end())
     {
         if (previous().kind == TokenType::SemiColon)
+        {
             return;
+        }
 
         switch (peek().kind)
         {
@@ -213,7 +317,9 @@ bool Parser::check(TokenType type)
 Token Parser::advance()
 {
     if (!is_at_end())
+    {
         current++;
+    }
     return previous();
 }
 
@@ -226,7 +332,9 @@ Token Parser::previous() { return tokens[current - 1]; }
 Token Parser::consume(TokenType type, std::string message)
 {
     if (check(type))
+    {
         return advance();
+    }
 
     throw std::runtime_error(message);
 }
