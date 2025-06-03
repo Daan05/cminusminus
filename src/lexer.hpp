@@ -17,6 +17,7 @@ class Lexer
     std::vector<Token> lex();
 
    private:
+    bool m_had_error;
     std::string m_source;
     std::vector<Token> m_tokens = {};
     size_t m_start;

@@ -1,7 +1,6 @@
 #include <iostream>
-#include <memory>
-#include <stdexcept>
 
+#include "common/error.hpp"
 #include "codegenerator.hpp"
 #include "common/common.hpp"
 #include "common/token.hpp"
@@ -15,11 +14,10 @@
 int main(int argc, char **argv)
 try
 {
+    // TODO: properly handle input
     if (argc < 2)
     {
-        throw std::runtime_error(
-            "c--: \x1B[31mfatal error: \033[0mno input files"
-        );
+        error::fatal("No input files");
     }
 
     std::string source = common::read_file(argv[1]);
@@ -52,7 +50,10 @@ try
 
     common::write_file("test.asm", asm_code);
 }
-catch (std::runtime_error const &error)
+catch (error::Fatal const &error)
 {
-    std::cout << error.what() << '\n';
+}
+catch (...)
+{
+    std::cout << "Unknown exception occured\n";
 }

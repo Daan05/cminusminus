@@ -44,7 +44,7 @@ VarExpr::VarExpr(Token token, int offset, int line)
 
 void VarExpr::accept(ExprVisitor &visitor) const
 {
-    visitor.visit_var_expr(*this);
+    visitor.visit_var_decl_expr(*this);
 }
 
 AssignExpr::AssignExpr(Var var, std::unique_ptr<Expr> expr, int line)

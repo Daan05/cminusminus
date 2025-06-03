@@ -1,13 +1,14 @@
 #include "lexer.hpp"
 
 #include <cctype>
-#include <iostream>
 #include <string>
 #include <vector>
+#include "common/error.hpp"
 #include "common/token.hpp"
 
 Lexer::Lexer(std::string const &source)
-    : m_source(source),
+    : m_had_error(false),
+      m_source(source),
       m_tokens({}),
       m_current(0),
       m_line(1),
@@ -40,6 +41,10 @@ std::vector<Token> Lexer::lex()
         Token(TokenType::Eof, "", Literal(), m_line, m_start - m_line_start)
     );
 
+    if (m_had_error)
+    {
+        error::fatal("Encountered an error during lexing pass");
+    }
     return m_tokens;
 }
 
@@ -114,9 +119,10 @@ void Lexer::lex_token()
         }
         else
         {
-            throw std::runtime_error(
-                "line " + std::to_string(m_line) + ": Unexpected character (" +
-                c + ").\n"
+            m_had_error = true;
+            error::report(
+                static_cast<int>(m_line),
+                "Unexpected character (" + std::string(1, c) + ")"
             );
             break;
         }
@@ -155,8 +161,10 @@ void Lexer::add_num_token()
     ));
 }
 
-// TODO: give function body
-void Lexer::add_str_token() {}
+void Lexer::add_str_token()
+{
+    error::todo("Lexer::add_str_token(): give function body");
+}
 
 void Lexer::add_ident_token()
 {

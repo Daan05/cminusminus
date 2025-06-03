@@ -22,8 +22,9 @@ class Parser
     parse();
 
    private:
-    std::vector<Token> tokens;
-    size_t current;
+    bool m_had_error;
+    std::vector<Token> m_tokens;
+    size_t m_current;
     std::unordered_map<std::string, size_t> variables;
 
    private:
