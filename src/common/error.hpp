@@ -6,6 +6,18 @@
 
 namespace error
 {
+struct Fatal
+{
+    Fatal(std::string message);
+    ~Fatal() = default;
+};
+
+struct Synchronize
+{
+    Synchronize(std::string message);
+    ~Synchronize() = default;
+};
+
 void unreachable();
 void todo(std::string message);
 void fatal(std::string message);

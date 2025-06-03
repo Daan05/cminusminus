@@ -53,6 +53,7 @@ struct Token
         TokenType kind, std::string lexeme, Literal literal, uint32_t line,
         uint32_t column
     );
+    Token() = default;
     ~Token();
 
     TokenType kind;

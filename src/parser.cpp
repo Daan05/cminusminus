@@ -1,13 +1,14 @@
 #include "parser.hpp"
 
+#include <cstddef>
 #include <iostream>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "common/expression.hpp"
+#include "common/error.hpp"
 #include "common/statements.hpp"
 #include "common/token.hpp"
 
@@ -46,7 +47,7 @@ try
 
     return parse_stmt();
 }
-catch (std::runtime_error const &err)
+catch (error::Synchronize const &err)
 {
     synchronize();
     return nullptr;
@@ -66,7 +67,7 @@ std::unique_ptr<Stmt> Parser::parse_var_decl()
 
     if (variables.contains(token.lexeme))
     {
-        throw std::runtime_error("Can't redefine variable");
+        error::synchronize("Can't redefine variable");
     }
     else
     {
@@ -127,11 +128,11 @@ std::unique_ptr<Expr> Parser::parse_assignment()
             }
             else
             {
-                throw std::runtime_error("Undefined variable");
+                error::synchronize("Undefined variable");
             }
         }
 
-        throw std::runtime_error("Invalid assignment target.");
+        error::synchronize("Invalid assignment target.");
     }
 
     return expr;
@@ -237,7 +238,7 @@ std::unique_ptr<Expr> Parser::parse_primary()
         }
         else
         {
-            throw std::runtime_error("Undefined variable");
+            error::synchronize("Undefined variable");
         }
     }
 
@@ -252,9 +253,10 @@ std::unique_ptr<Expr> Parser::parse_primary()
         return std::make_unique<GroupingExpr>(std::move(expr), paren.line);
     }
 
-    throw std::runtime_error(
+    error::synchronize(
         "line " + std::to_string(peek().line) + ": Expected expression"
     );
+    return nullptr;
 }
 
 void Parser::synchronize()
@@ -333,5 +335,6 @@ Token Parser::consume(TokenType type, std::string message)
         return advance();
     }
 
-    throw std::runtime_error(message);
+    error::synchronize(message);
+    return Token();
 }

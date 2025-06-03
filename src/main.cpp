@@ -1,6 +1,5 @@
 #include <iostream>
 #include <memory>
-#include <stdexcept>
 
 #include "common/error.hpp"
 #include "codegenerator.hpp"
@@ -52,7 +51,10 @@ try
 
     common::write_file("test.asm", asm_code);
 }
-catch (std::runtime_error const &error)
+catch (error::Fatal const &error)
 {
-    std::cout << error.what() << '\n';
+}
+catch (...)
+{
+    std::cout << "Unknown exception occured\n";
 }
