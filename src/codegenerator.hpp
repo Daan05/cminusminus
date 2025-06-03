@@ -3,18 +3,16 @@
 
 #include <memory>
 #include <sstream>
-#include <unordered_map>
 #include <vector>
 
+#include "common/expression.hpp"
 #include "common/statements.hpp"
 
 class CodeGenerator
 {
    public:
     CodeGenerator(
-        std::pair<
-            std::vector<std::unique_ptr<Stmt>>,
-            std::unordered_map<std::string, size_t>>
+        std::pair<std::vector<std::unique_ptr<Stmt>>, std::vector<LocalVar>>
             statements
     );
     ~CodeGenerator();
@@ -22,9 +20,7 @@ class CodeGenerator
     std::string generate();
 
    private:
-    std::pair<
-        std::vector<std::unique_ptr<Stmt>>,
-        std::unordered_map<std::string, size_t>>
+    std::pair<std::vector<std::unique_ptr<Stmt>>, std::vector<LocalVar>>
         m_statements;
     std::ostringstream m_output;
 

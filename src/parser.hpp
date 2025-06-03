@@ -3,9 +3,9 @@
 
 #include <cstddef>
 #include <memory>
-#include <unordered_map>
 #include <utility>
 #include <vector>
+
 #include "common/expression.hpp"
 #include "common/statements.hpp"
 #include "common/token.hpp"
@@ -18,14 +18,14 @@ class Parser
 
     std::pair<
         std::vector<std::unique_ptr<Stmt>>,
-        std::unordered_map<std::string, size_t>>
+        std::vector<LocalVar>>
     parse();
 
    private:
     bool m_had_error;
     std::vector<Token> m_tokens;
     size_t m_current;
-    std::unordered_map<std::string, size_t> variables;
+    std::vector<LocalVar> m_variables;
 
    private:
     std::unique_ptr<Stmt> parse_decl();
@@ -53,6 +53,8 @@ class Parser
     Token peek();
     Token previous();
     Token consume(TokenType type, std::string message);
+
+    int find_local_var(std::string const &name);
 };
 
 #endif

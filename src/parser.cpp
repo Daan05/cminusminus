@@ -1,6 +1,5 @@
 #include "parser.hpp"
 
-#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -20,8 +19,7 @@ Parser::Parser(std::vector<Token> tokens)
 
 Parser::~Parser() {}
 
-std::pair<
-    std::vector<std::unique_ptr<Stmt>>, std::unordered_map<std::string, size_t>>
+std::pair<std::vector<std::unique_ptr<Stmt>>, std::vector<LocalVar>>
 Parser::parse()
 {
     std::vector<std::unique_ptr<Stmt>> statements;
@@ -38,7 +36,7 @@ Parser::parse()
     {
         error::fatal("Encountered an error during parsing pass");
     }
-    return {std::move(statements), variables};
+    return {std::move(statements), m_variables};
 }
 
 std::unique_ptr<Stmt> Parser::parse_decl()
@@ -70,17 +68,18 @@ std::unique_ptr<Stmt> Parser::parse_var_decl()
 
     consume(TokenType::SemiColon, "Expect ';' after variable declaration.");
 
-    if (variables.contains(token.lexeme))
+    int idx = find_local_var(token.lexeme);
+    if (idx != -1)
     {
         error::synchronize(token.line, "Can't redefine variable");
     }
     else
     {
-        variables[token.lexeme] = rbp_offset;
+        m_variables.push_back(LocalVar(token, rbp_offset));
     }
 
     auto stmt = std::make_unique<VarStmt>(
-        VarStmt(Var(token, rbp_offset), std::move(initializer))
+        VarStmt(LocalVar(token, rbp_offset), std::move(initializer))
     );
     rbp_offset += 8;
     return stmt;
@@ -124,11 +123,12 @@ std::unique_ptr<Expr> Parser::parse_assignment()
         if (auto *var_expr = dynamic_cast<VarExpr *>(expr.get()))
         {
             Token name = var_expr->var.token;
-            if (variables.contains(name.lexeme))
+            int idx = find_local_var(name.lexeme);
+            if (idx != -1)
             {
                 return std::make_unique<AssignExpr>(
-                    Var(name, variables[name.lexeme]), std::move(value),
-                    name.line
+                    LocalVar(name, m_variables[idx].rbp_offset),
+                    std::move(value), name.line
                 );
             }
             else
@@ -235,10 +235,11 @@ std::unique_ptr<Expr> Parser::parse_primary()
     if (match({TokenType::Identifier}))
     {
         Token token = previous();
-        if (variables.contains(token.lexeme))
+        int idx = find_local_var(token.lexeme);
+        if (idx != -1)
         {
             return std::make_unique<VarExpr>(
-                token, variables[token.lexeme], token.line
+                token, m_variables[idx].rbp_offset, token.line
             );
         }
         else
@@ -271,21 +272,6 @@ void Parser::synchronize()
         {
             return;
         }
-
-        // switch (peek().kind)
-        // {
-        // case TokenType::Struct:
-        // case TokenType::Fn:
-        // case TokenType::Let:
-        // case TokenType::For:
-        // case TokenType::If:
-        // case TokenType::While:
-        // case TokenType::Print:
-        // case TokenType::Return:
-        //     return;
-        // default:
-        //     return;
-        // }
 
         advance();
     }
@@ -338,4 +324,16 @@ Token Parser::consume(TokenType type, std::string message)
 
     error::synchronize(previous().line, message);
     return Token();
+}
+
+int Parser::find_local_var(std::string const &name)
+{
+    for (int ix = m_variables.size() - 1; ix >= 0; --ix)
+    {
+        if (name == m_variables[ix].token.lexeme)
+        {
+            return ix;
+        }
+    }
+    return -1;
 }

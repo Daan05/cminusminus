@@ -5,10 +5,10 @@
 
 #include "token.hpp"
 
-struct Var
+struct LocalVar
 {
-    Var(Token token, int offset);
-    ~Var() = default;
+    LocalVar(Token token, int offset);
+    ~LocalVar() = default;
 
     Token token;
     int rbp_offset;
@@ -71,17 +71,17 @@ struct VarExpr : public Expr
 
     void accept(ExprVisitor &visitor) const override;
 
-    Var var;
+    LocalVar var;
 };
 
 struct AssignExpr : public Expr
 {
    public:
-    AssignExpr(Var var, std::unique_ptr<Expr> expr, int line);
+    AssignExpr(LocalVar var, std::unique_ptr<Expr> expr, int line);
 
     void accept(ExprVisitor &visitor) const override;
 
-    Var var;
+    LocalVar var;
     std::unique_ptr<Expr> m_expr;
 };
 
