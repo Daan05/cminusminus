@@ -165,6 +165,19 @@ void StmtPrinter::visit_var_stmt(VarStmt const &stmt)
     m_output << exprPrinter.print(*stmt.expr) << '\n';
 }
 
+void StmtPrinter::visit_block_stmt(BlockStmt const &stmt)
+{
+    m_output << "START BLOCK\n";
+
+    StmtPrinter printer;
+    for (auto const &stmt : stmt.statements)
+    {
+        m_output << printer.print(*stmt);
+    }
+
+    m_output << "END BLOCK\n";
+}
+
 std::string StmtCodeGenerator::generate(Stmt const &stmt)
 {
     m_output.clear();
@@ -196,4 +209,11 @@ void StmtCodeGenerator::visit_var_stmt(VarStmt const &stmt)
     m_output << exprCodeGenerator.generate(*stmt.expr);
     m_output << "\tpop rax\n";
     m_output << "\tmov qword [rbp - " << stmt.var.rbp_offset << "], rax\n";
+}
+
+void StmtCodeGenerator::visit_block_stmt(BlockStmt const &stmt)
+{
+    // TODO
+    (void)stmt;
+    m_output << "\t; block...\n";
 }

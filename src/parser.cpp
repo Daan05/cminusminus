@@ -1,5 +1,6 @@
 #include "parser.hpp"
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -13,7 +14,10 @@
 static int rbp_offset = 8;
 
 Parser::Parser(std::vector<Token> tokens)
-    : m_had_error(false), m_tokens(std::move(tokens)), m_current(0)
+    : m_had_error(false),
+      m_tokens(std::move(tokens)),
+      m_current(0),
+      m_scope_depth(0)
 {
 }
 
@@ -91,6 +95,10 @@ std::unique_ptr<Stmt> Parser::parse_stmt()
     {
         return parse_print_stmt();
     }
+    else if (match({TokenType::LeftBrace}))
+    {
+        return parse_block_stmt();
+    }
 
     return parse_expr_stmt();
 }
@@ -100,6 +108,25 @@ std::unique_ptr<Stmt> Parser::parse_print_stmt()
     auto value = parse_expr();
     consume(TokenType::SemiColon, "Expect ';' after value.");
     auto stmt = std::make_unique<PrintStmt>(PrintStmt(std::move(value)));
+    return stmt;
+}
+
+std::unique_ptr<Stmt> Parser::parse_block_stmt()
+{
+    // begin scope
+    m_scope_depth++;
+
+    std::vector<std::unique_ptr<Stmt>> statements = {};
+    while (!check(TokenType::RightBrace) && !is_at_end())
+    {
+        statements.push_back(parse_decl());
+    }
+    consume(TokenType::RightBrace, "Expect '}' after block.");
+
+    // end scope
+    m_scope_depth--;
+
+    std::unique_ptr<BlockStmt> stmt = std::make_unique<BlockStmt>(BlockStmt(std::move(statements)));
     return stmt;
 }
 

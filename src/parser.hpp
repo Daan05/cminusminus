@@ -16,16 +16,15 @@ class Parser
     Parser(std::vector<Token> tokens);
     ~Parser();
 
-    std::pair<
-        std::vector<std::unique_ptr<Stmt>>,
-        std::vector<LocalVar>>
-    parse();
+    std::pair<std::vector<std::unique_ptr<Stmt>>, std::vector<LocalVar>> parse(
+    );
 
    private:
     bool m_had_error;
     std::vector<Token> m_tokens;
     size_t m_current;
     std::vector<LocalVar> m_variables;
+    size_t m_scope_depth;
 
    private:
     std::unique_ptr<Stmt> parse_decl();
@@ -33,7 +32,10 @@ class Parser
 
     std::unique_ptr<Stmt> parse_stmt();
     std::unique_ptr<Stmt> parse_print_stmt();
+    std::unique_ptr<Stmt> parse_block_stmt();
     std::unique_ptr<Stmt> parse_expr_stmt();
+
+    std::unique_ptr<Stmt> parse_block();
 
     std::unique_ptr<Expr> parse_assignment();
     std::unique_ptr<Expr> parse_expr();

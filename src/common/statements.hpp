@@ -2,6 +2,7 @@
 #define STATEMENTS_HPP
 
 #include <memory>
+#include <vector>
 
 #include "expression.hpp"
 
@@ -12,6 +13,7 @@ struct StmtVisitor
     virtual void visit_expr_stmt(struct ExprStmt const &stmt) = 0;
     virtual void visit_print_stmt(struct PrintStmt const &stmt) = 0;
     virtual void visit_var_stmt(struct VarStmt const &stmt) = 0;
+    virtual void visit_block_stmt(struct BlockStmt const &stmt) = 0;
 };
 
 struct Stmt
@@ -47,6 +49,15 @@ struct VarStmt : public Stmt
 
     LocalVar var;
     std::unique_ptr<Expr> expr;
+};
+
+struct BlockStmt : public Stmt
+{
+   public:
+    BlockStmt(std::vector<std::unique_ptr<Stmt>> statements);
+    void accept(StmtVisitor &visitor) const override;
+
+    std::vector<std::unique_ptr<Stmt>> statements;
 };
 
 #endif

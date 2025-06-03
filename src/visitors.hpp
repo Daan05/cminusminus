@@ -43,6 +43,7 @@ public:
     void visit_print_stmt(PrintStmt const &stmt) override;
     void visit_expr_stmt(ExprStmt const &stmt) override;
     void visit_var_stmt(VarStmt const &stmt) override;
+    void visit_block_stmt(BlockStmt const &stmt) override;
 
 private:
     std::ostringstream m_output;
@@ -55,6 +56,7 @@ public:
     void visit_print_stmt(PrintStmt const &stmt) override;
     void visit_expr_stmt(ExprStmt const &stmt) override;
     void visit_var_stmt(VarStmt const &stmt) override;
+    void visit_block_stmt(BlockStmt const &stmt) override;
 
 private:
     std::ostringstream m_output;
