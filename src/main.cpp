@@ -1,5 +1,4 @@
 #include <iostream>
-#include <memory>
 
 #include "common/error.hpp"
 #include "codegenerator.hpp"
@@ -18,7 +17,7 @@ try
     // TODO: properly handle input
     if (argc < 2)
     {
-        error::fatal("c--: \x1B[31mfatal error: \033[0mno input files");
+        error::fatal("No input files");
     }
 
     std::string source = common::read_file(argv[1]);

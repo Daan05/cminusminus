@@ -1,7 +1,6 @@
 #include "parser.hpp"
 
 #include <cstddef>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -15,7 +14,7 @@
 static int rbp_offset = 8;
 
 Parser::Parser(std::vector<Token> tokens)
-    : tokens(std::move(tokens)), current(0)
+    : m_had_error(false), m_tokens(std::move(tokens)), m_current(0)
 {
 }
 
@@ -34,6 +33,11 @@ Parser::parse()
             statements.push_back(std::move(stmt));
         }
     }
+
+    if (m_had_error)
+    {
+        error::fatal("Encountered an error during parsing pass");
+    }
     return {std::move(statements), variables};
 }
 
@@ -49,6 +53,7 @@ try
 }
 catch (error::Synchronize const &err)
 {
+    m_had_error = true;
     synchronize();
     return nullptr;
 }
@@ -67,7 +72,7 @@ std::unique_ptr<Stmt> Parser::parse_var_decl()
 
     if (variables.contains(token.lexeme))
     {
-        error::synchronize("Can't redefine variable");
+        error::synchronize(token.line, "Can't redefine variable");
     }
     else
     {
@@ -128,11 +133,11 @@ std::unique_ptr<Expr> Parser::parse_assignment()
             }
             else
             {
-                error::synchronize("Undefined variable");
+                error::synchronize(name.line, "Undefined variable");
             }
         }
 
-        error::synchronize("Invalid assignment target.");
+        error::synchronize(previous().line, "Invalid assignment target.");
     }
 
     return expr;
@@ -238,7 +243,9 @@ std::unique_ptr<Expr> Parser::parse_primary()
         }
         else
         {
-            error::synchronize("Undefined variable");
+            error::synchronize(
+                static_cast<int>(token.line), "Undefined variable"
+            );
         }
     }
 
@@ -246,22 +253,16 @@ std::unique_ptr<Expr> Parser::parse_primary()
     {
         Token paren = previous();  // Save left paren for line number
         auto expr = parse_expr();
-        consume(
-            TokenType::RightParen, "line " + std::to_string(paren.line) +
-                                       ": Expect ')' after expression"
-        );
+        consume(TokenType::RightParen, "Expect ')' after expression");
         return std::make_unique<GroupingExpr>(std::move(expr), paren.line);
     }
 
-    error::synchronize(
-        "line " + std::to_string(peek().line) + ": Expected expression"
-    );
+    error::synchronize(previous().line, "Expected expression");
     return nullptr;
 }
 
 void Parser::synchronize()
 {
-    std::cout << "line: " << peek().line << " synchronize\n";
     advance();
 
     while (!is_at_end())
@@ -271,20 +272,20 @@ void Parser::synchronize()
             return;
         }
 
-        switch (peek().kind)
-        {
-        case TokenType::Struct:
-        case TokenType::Fn:
-        case TokenType::Let:
-        case TokenType::For:
-        case TokenType::If:
-        case TokenType::While:
-        case TokenType::Print:
-        case TokenType::Return:
-            return;
-        default:
-            return;
-        }
+        // switch (peek().kind)
+        // {
+        // case TokenType::Struct:
+        // case TokenType::Fn:
+        // case TokenType::Let:
+        // case TokenType::For:
+        // case TokenType::If:
+        // case TokenType::While:
+        // case TokenType::Print:
+        // case TokenType::Return:
+        //     return;
+        // default:
+        //     return;
+        // }
 
         advance();
     }
@@ -317,16 +318,16 @@ Token Parser::advance()
 {
     if (!is_at_end())
     {
-        current++;
+        m_current++;
     }
     return previous();
 }
 
 bool Parser::is_at_end() { return peek().kind == TokenType::Eof; }
 
-Token Parser::peek() { return tokens[current]; }
+Token Parser::peek() { return m_tokens[m_current]; }
 
-Token Parser::previous() { return tokens[current - 1]; }
+Token Parser::previous() { return m_tokens[m_current - 1]; }
 
 Token Parser::consume(TokenType type, std::string message)
 {
@@ -335,6 +336,6 @@ Token Parser::consume(TokenType type, std::string message)
         return advance();
     }
 
-    error::synchronize(message);
+    error::synchronize(previous().line, message);
     return Token();
 }
