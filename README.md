@@ -13,4 +13,11 @@ b = b + 1;
 print a;
 print b;
 print -(a + b) + 201;
+
+print a; // prints 1
+{
+  let a = 2;
+  print a; // prints 2
+}
+print a; // prints 1
 ```
