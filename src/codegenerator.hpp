@@ -11,17 +11,13 @@
 class CodeGenerator
 {
    public:
-    CodeGenerator(
-        std::pair<std::vector<std::unique_ptr<Stmt>>, std::vector<LocalVar>>
-            statements
-    );
+    CodeGenerator(std::vector<std::unique_ptr<Stmt>> statements);
     ~CodeGenerator();
 
     std::string generate();
 
    private:
-    std::pair<std::vector<std::unique_ptr<Stmt>>, std::vector<LocalVar>>
-        m_statements;
+    std::vector<std::unique_ptr<Stmt>> m_statements;
     std::ostringstream m_output;
 
    private:

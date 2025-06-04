@@ -16,7 +16,7 @@ class Parser
     Parser(std::vector<Token> tokens);
     ~Parser();
 
-    std::pair<std::vector<std::unique_ptr<Stmt>>, std::vector<LocalVar>> parse(
+    std::vector<std::unique_ptr<Stmt>> parse(
     );
 
    private:

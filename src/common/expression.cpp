@@ -4,8 +4,8 @@
 
 #include "token.hpp"
 
-LocalVar::LocalVar(Token token, int offset)
-    : token(token), rbp_offset(offset) {};
+LocalVar::LocalVar(Token token, int scope_depth)
+    : token(token), scope_depth(scope_depth), rbp_offset(0) {};
 
 Expr::Expr(int line) : m_line(line) {}
 

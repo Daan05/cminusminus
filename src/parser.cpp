@@ -1,6 +1,5 @@
 #include "parser.hpp"
 
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -23,8 +22,7 @@ Parser::Parser(std::vector<Token> tokens)
 
 Parser::~Parser() {}
 
-std::pair<std::vector<std::unique_ptr<Stmt>>, std::vector<LocalVar>>
-Parser::parse()
+std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
     std::vector<std::unique_ptr<Stmt>> statements;
     while (!is_at_end())
@@ -40,7 +38,7 @@ Parser::parse()
     {
         error::fatal("Encountered an error during parsing pass");
     }
-    return {std::move(statements), m_variables};
+    return statements;
 }
 
 std::unique_ptr<Stmt> Parser::parse_decl()
@@ -79,11 +77,11 @@ std::unique_ptr<Stmt> Parser::parse_var_decl()
     }
     else
     {
-        m_variables.push_back(LocalVar(token, rbp_offset));
+        m_variables.push_back(LocalVar(token, m_scope_depth));
     }
 
     auto stmt = std::make_unique<VarStmt>(
-        VarStmt(LocalVar(token, rbp_offset), std::move(initializer))
+        VarStmt(LocalVar(token, m_scope_depth), std::move(initializer))
     );
     rbp_offset += 8;
     return stmt;
@@ -126,7 +124,8 @@ std::unique_ptr<Stmt> Parser::parse_block_stmt()
     // end scope
     m_scope_depth--;
 
-    std::unique_ptr<BlockStmt> stmt = std::make_unique<BlockStmt>(BlockStmt(std::move(statements)));
+    std::unique_ptr<BlockStmt> stmt =
+        std::make_unique<BlockStmt>(BlockStmt(std::move(statements)));
     return stmt;
 }
 
@@ -154,7 +153,7 @@ std::unique_ptr<Expr> Parser::parse_assignment()
             if (idx != -1)
             {
                 return std::make_unique<AssignExpr>(
-                    LocalVar(name, m_variables[idx].rbp_offset),
+                    LocalVar(name, m_scope_depth),
                     std::move(value), name.line
                 );
             }

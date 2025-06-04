@@ -1,9 +1,11 @@
 #include "visitors.hpp"
 
 #include "common/error.hpp"
+#include "common/expression.hpp"
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 std::string ExprPrinter::print(Expr const &expr)
 {
@@ -178,6 +180,65 @@ void StmtPrinter::visit_block_stmt(BlockStmt const &stmt)
     m_output << "END BLOCK\n";
 }
 
+std::vector<LocalVar> StmtAnalyzer::m_vars = {};
+int StmtAnalyzer::m_scope_depth = 0;
+
+void StmtAnalyzer::analyze(Stmt const &stmt) { stmt.accept(*this); }
+
+void StmtAnalyzer::visit_print_stmt(PrintStmt const &stmt) { (void)stmt; }
+
+void StmtAnalyzer::visit_expr_stmt(ExprStmt const &stmt) { (void)stmt; }
+
+void StmtAnalyzer::visit_var_stmt(VarStmt const &stmt)
+{
+    m_vars.push_back(stmt.var);
+    // stmt.var.rbp_offset = m_vars.size() * 8;
+
+    std::cout << "var stmt ";
+    for (auto const &var : m_vars)
+    {
+        std::cout << "[" << var.token.lexeme << ", " << var.scope_depth << ", "
+                  << var.rbp_offset << "]";
+    }
+    std::cout << '\n';
+}
+
+void StmtAnalyzer::visit_block_stmt(BlockStmt const &stmt)
+{
+    m_scope_depth++;
+    std::cout << "start scope ";
+    for (auto const &var : m_vars)
+    {
+        std::cout << "[" << var.token.lexeme << ", " << var.scope_depth << ", "
+                  << var.rbp_offset << "]";
+    }
+    std::cout << '\n';
+
+    StmtAnalyzer analyzer;
+    for (auto const &stmt : stmt.statements)
+    {
+        analyzer.analyze(*stmt);
+    }
+
+    m_scope_depth--;
+
+    for (int ix = m_vars.size() - 1; ix >= 0; --ix)
+    {
+        if (m_vars[ix].scope_depth > m_scope_depth)
+        {
+            std::cout << "pop\n";
+            m_vars.pop_back();
+        }
+    }
+    std::cout << "end scope ";
+    for (auto const &var : m_vars)
+    {
+        std::cout << "[" << var.token.lexeme << ", " << var.scope_depth << ", "
+                  << var.rbp_offset << "]";
+    }
+    std::cout << '\n';
+}
+
 std::string StmtCodeGenerator::generate(Stmt const &stmt)
 {
     m_output.clear();
@@ -214,6 +275,13 @@ void StmtCodeGenerator::visit_var_stmt(VarStmt const &stmt)
 void StmtCodeGenerator::visit_block_stmt(BlockStmt const &stmt)
 {
     // TODO
-    (void)stmt;
-    m_output << "\t; block...\n";
+    m_output << "\t; START BLOCK\n";
+
+    StmtCodeGenerator generator;
+    for (auto const &stmt : stmt.statements)
+    {
+        m_output << generator.generate(*stmt);
+    }
+
+    m_output << "\t; END BLOCK\n";
 }

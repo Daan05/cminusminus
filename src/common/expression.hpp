@@ -7,10 +7,11 @@
 
 struct LocalVar
 {
-    LocalVar(Token token, int offset);
+    LocalVar(Token token, int scope_depth);
     ~LocalVar() = default;
 
     Token token;
+    int scope_depth;
     int rbp_offset;
 };
 

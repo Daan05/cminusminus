@@ -38,27 +38,41 @@ class ExprCodeGenerator : public ExprVisitor
 
 class StmtPrinter : public StmtVisitor
 {
-public:
+   public:
     std::string print(Stmt const &stmt);
     void visit_print_stmt(PrintStmt const &stmt) override;
     void visit_expr_stmt(ExprStmt const &stmt) override;
     void visit_var_stmt(VarStmt const &stmt) override;
     void visit_block_stmt(BlockStmt const &stmt) override;
 
-private:
+   private:
     std::ostringstream m_output;
+};
+
+class StmtAnalyzer : public StmtVisitor
+{
+   public:
+    void analyze(Stmt const &stmt);
+    void visit_print_stmt(PrintStmt const &stmt) override;
+    void visit_expr_stmt(ExprStmt const &stmt) override;
+    void visit_var_stmt(VarStmt const &stmt) override;
+    void visit_block_stmt(BlockStmt const &stmt) override;
+
+   private:
+    static std::vector<LocalVar> m_vars;
+    static int m_scope_depth;
 };
 
 class StmtCodeGenerator : public StmtVisitor
 {
-public:
+   public:
     std::string generate(Stmt const &stmt);
     void visit_print_stmt(PrintStmt const &stmt) override;
     void visit_expr_stmt(ExprStmt const &stmt) override;
     void visit_var_stmt(VarStmt const &stmt) override;
     void visit_block_stmt(BlockStmt const &stmt) override;
 
-private:
+   private:
     std::ostringstream m_output;
 };
 

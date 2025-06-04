@@ -1,9 +1,7 @@
+let a = 0;
+print a;
 {
-    let a = 2;
-
-    {
-        let b = 3;
-    }
+    let b = 1;
+    print b;
 }
-
-print 3;
+print a;
