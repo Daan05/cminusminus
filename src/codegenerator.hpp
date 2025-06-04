@@ -5,7 +5,6 @@
 #include <sstream>
 #include <vector>
 
-#include "common/expression.hpp"
 #include "common/statements.hpp"
 
 class CodeGenerator

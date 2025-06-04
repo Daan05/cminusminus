@@ -19,7 +19,7 @@ BinaryExpr::BinaryExpr(
 {
 }
 
-void BinaryExpr::accept(ExprVisitor &visitor) const
+void BinaryExpr::accept(ExprVisitor &visitor)
 {
     visitor.visit_binary_expr(*this);
 }
@@ -29,27 +29,25 @@ LiteralExpr::LiteralExpr(Token token, int line)
 {
 }
 
-void LiteralExpr::accept(ExprVisitor &visitor) const
+void LiteralExpr::accept(ExprVisitor &visitor)
 {
     visitor.visit_literal_expr(*this);
 }
 
 VarExpr::VarExpr(Token token, int scope_depth, int line)
-    : Expr(line), var(std::move(LocalVar(std::move(token), scope_depth)))
+    : Expr(line),
+      var(std::make_unique<LocalVar>(LocalVar(std::move(token), scope_depth)))
 {
 }
 
-void VarExpr::accept(ExprVisitor &visitor) const
-{
-    visitor.visit_var_decl_expr(*this);
-}
+void VarExpr::accept(ExprVisitor &visitor) { visitor.visit_var_expr(*this); }
 
 AssignExpr::AssignExpr(LocalVar var, std::unique_ptr<Expr> expr, int line)
     : Expr(line), var(std::move(var)), m_expr(std::move(expr))
 {
 }
 
-void AssignExpr::accept(ExprVisitor &visitor) const
+void AssignExpr::accept(ExprVisitor &visitor)
 {
     visitor.visit_assign_expr(*this);
 }
@@ -59,7 +57,7 @@ UnaryExpr::UnaryExpr(Token op, std::unique_ptr<Expr> right, int line)
 {
 }
 
-void UnaryExpr::accept(ExprVisitor &visitor) const
+void UnaryExpr::accept(ExprVisitor &visitor)
 {
     visitor.visit_unary_expr(*this);
 }
@@ -69,7 +67,7 @@ GroupingExpr::GroupingExpr(std::unique_ptr<Expr> expr, int line)
 {
 }
 
-void GroupingExpr::accept(ExprVisitor &visitor) const
+void GroupingExpr::accept(ExprVisitor &visitor)
 {
     visitor.visit_grouping_expr(*this);
 }

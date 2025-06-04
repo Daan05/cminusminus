@@ -5,14 +5,11 @@
 
 ExprStmt::ExprStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)) {}
 
-void ExprStmt::accept(StmtVisitor &visitor) const
-{
-    visitor.visit_expr_stmt(*this);
-}
+void ExprStmt::accept(StmtVisitor &visitor) { visitor.visit_expr_stmt(*this); }
 
 PrintStmt::PrintStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)) {}
 
-void PrintStmt::accept(StmtVisitor &visitor) const
+void PrintStmt::accept(StmtVisitor &visitor)
 {
     visitor.visit_print_stmt(*this);
 }
@@ -22,17 +19,14 @@ VarStmt::VarStmt(LocalVar var, std::unique_ptr<Expr> expr)
 {
 }
 
-void VarStmt::accept(StmtVisitor &visitor) const
-{
-    visitor.visit_var_stmt(*this);
-}
+void VarStmt::accept(StmtVisitor &visitor) { visitor.visit_var_stmt(*this); }
 
 BlockStmt::BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
     : statements(std::move(statements))
 {
 }
 
-void BlockStmt::accept(StmtVisitor &visitor) const
+void BlockStmt::accept(StmtVisitor &visitor)
 {
     visitor.visit_block_stmt(*this);
 }

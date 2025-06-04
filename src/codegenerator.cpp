@@ -1,7 +1,7 @@
 #include "codegenerator.hpp"
 
 #include <memory>
-#include "common/expression.hpp"
+
 #include "visitors.hpp"
 
 CodeGenerator::CodeGenerator(std::vector<std::unique_ptr<Stmt>> statements)
@@ -28,7 +28,7 @@ std::string CodeGenerator::generate()
     m_output << "\tsub rsp, 64 ; Reserve stack space (8 64-bit vars)\n";
 
     StmtCodeGenerator stmtCodeGenerator;
-    for (auto const &stmt : m_statements)
+    for (auto &stmt : m_statements)
     {
         m_output << stmtCodeGenerator.generate(*stmt);
     }
