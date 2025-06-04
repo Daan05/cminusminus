@@ -185,34 +185,34 @@ int StmtAnalyzer::m_scope_depth = 0;
 
 void StmtAnalyzer::analyze(Stmt const &stmt) { stmt.accept(*this); }
 
-void StmtAnalyzer::visit_print_stmt(PrintStmt const &stmt) { (void)stmt; }
+void StmtAnalyzer::visit_print_stmt(PrintStmt const &stmt)
+{
+    // TODO: ...
+    (void)stmt;
+}
 
-void StmtAnalyzer::visit_expr_stmt(ExprStmt const &stmt) { (void)stmt; }
+void StmtAnalyzer::visit_expr_stmt(ExprStmt const &stmt)
+{
+    // TODO: check if vars are declared
+    (void)stmt;
+}
 
 void StmtAnalyzer::visit_var_stmt(VarStmt const &stmt)
 {
-    m_vars.push_back(stmt.var);
-    // stmt.var.rbp_offset = m_vars.size() * 8;
-
-    std::cout << "var stmt ";
-    for (auto const &var : m_vars)
+    for (int ix = m_vars.size() - 1; ix >= 0; --ix)
     {
-        std::cout << "[" << var.token.lexeme << ", " << var.scope_depth << ", "
-                  << var.rbp_offset << "]";
+        if (stmt.var.token.lexeme == m_vars[ix].token.lexeme &&
+            m_vars[ix].scope_depth == m_scope_depth)
+        {
+            error::report(stmt.var.token.line, "Already defined variable");
+        }
     }
-    std::cout << '\n';
+    m_vars.push_back(stmt.var);
 }
 
 void StmtAnalyzer::visit_block_stmt(BlockStmt const &stmt)
 {
     m_scope_depth++;
-    std::cout << "start scope ";
-    for (auto const &var : m_vars)
-    {
-        std::cout << "[" << var.token.lexeme << ", " << var.scope_depth << ", "
-                  << var.rbp_offset << "]";
-    }
-    std::cout << '\n';
 
     StmtAnalyzer analyzer;
     for (auto const &stmt : stmt.statements)
@@ -220,23 +220,16 @@ void StmtAnalyzer::visit_block_stmt(BlockStmt const &stmt)
         analyzer.analyze(*stmt);
     }
 
-    m_scope_depth--;
 
     for (int ix = m_vars.size() - 1; ix >= 0; --ix)
     {
-        if (m_vars[ix].scope_depth > m_scope_depth)
+        if (m_vars[ix].scope_depth >= m_scope_depth)
         {
-            std::cout << "pop\n";
             m_vars.pop_back();
         }
     }
-    std::cout << "end scope ";
-    for (auto const &var : m_vars)
-    {
-        std::cout << "[" << var.token.lexeme << ", " << var.scope_depth << ", "
-                  << var.rbp_offset << "]";
-    }
-    std::cout << '\n';
+
+    m_scope_depth--;
 }
 
 std::string StmtCodeGenerator::generate(Stmt const &stmt)

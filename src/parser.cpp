@@ -70,16 +70,6 @@ std::unique_ptr<Stmt> Parser::parse_var_decl()
 
     consume(TokenType::SemiColon, "Expect ';' after variable declaration.");
 
-    int idx = find_local_var(token.lexeme);
-    if (idx != -1)
-    {
-        error::synchronize(token.line, "Can't redefine variable");
-    }
-    else
-    {
-        m_variables.push_back(LocalVar(token, m_scope_depth));
-    }
-
     auto stmt = std::make_unique<VarStmt>(
         VarStmt(LocalVar(token, m_scope_depth), std::move(initializer))
     );
@@ -149,18 +139,9 @@ std::unique_ptr<Expr> Parser::parse_assignment()
         if (auto *var_expr = dynamic_cast<VarExpr *>(expr.get()))
         {
             Token name = var_expr->var.token;
-            int idx = find_local_var(name.lexeme);
-            if (idx != -1)
-            {
-                return std::make_unique<AssignExpr>(
-                    LocalVar(name, m_scope_depth),
-                    std::move(value), name.line
-                );
-            }
-            else
-            {
-                error::synchronize(name.line, "Undefined variable");
-            }
+            return std::make_unique<AssignExpr>(
+                LocalVar(name, m_scope_depth), std::move(value), name.line
+            );
         }
 
         error::synchronize(previous().line, "Invalid assignment target.");
@@ -261,19 +242,8 @@ std::unique_ptr<Expr> Parser::parse_primary()
     if (match({TokenType::Identifier}))
     {
         Token token = previous();
-        int idx = find_local_var(token.lexeme);
-        if (idx != -1)
-        {
-            return std::make_unique<VarExpr>(
-                token, m_variables[idx].rbp_offset, token.line
-            );
-        }
-        else
-        {
-            error::synchronize(
-                static_cast<int>(token.line), "Undefined variable"
-            );
-        }
+
+        return std::make_unique<VarExpr>(token, m_scope_depth, token.line);
     }
 
     if (match({TokenType::LeftParen}))
@@ -350,16 +320,4 @@ Token Parser::consume(TokenType type, std::string message)
 
     error::synchronize(previous().line, message);
     return Token();
-}
-
-int Parser::find_local_var(std::string const &name)
-{
-    for (int ix = m_variables.size() - 1; ix >= 0; --ix)
-    {
-        if (name == m_variables[ix].token.lexeme)
-        {
-            return ix;
-        }
-    }
-    return -1;
 }

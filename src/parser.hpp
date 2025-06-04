@@ -23,7 +23,6 @@ class Parser
     bool m_had_error;
     std::vector<Token> m_tokens;
     size_t m_current;
-    std::vector<LocalVar> m_variables;
     size_t m_scope_depth;
 
    private:
@@ -55,8 +54,6 @@ class Parser
     Token peek();
     Token previous();
     Token consume(TokenType type, std::string message);
-
-    int find_local_var(std::string const &name);
 };
 
 #endif

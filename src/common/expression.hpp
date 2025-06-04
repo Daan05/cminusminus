@@ -68,7 +68,7 @@ struct LiteralExpr : public Expr
 struct VarExpr : public Expr
 {
    public:
-    VarExpr(Token token, int offset, int line);
+    VarExpr(Token token, int scope_depth, int line);
 
     void accept(ExprVisitor &visitor) const override;
 

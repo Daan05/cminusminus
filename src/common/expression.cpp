@@ -34,8 +34,8 @@ void LiteralExpr::accept(ExprVisitor &visitor) const
     visitor.visit_literal_expr(*this);
 }
 
-VarExpr::VarExpr(Token token, int offset, int line)
-    : Expr(line), var(std::move(LocalVar(std::move(token), offset)))
+VarExpr::VarExpr(Token token, int scope_depth, int line)
+    : Expr(line), var(std::move(LocalVar(std::move(token), scope_depth)))
 {
 }
 
