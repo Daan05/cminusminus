@@ -37,9 +37,15 @@ try
     Parser parser(tokens);
     auto statements = parser.parse();
 
+    StmtAnalyzer analyzer;
+    for (auto &stmt : statements)
+    {
+        analyzer.analyze(*stmt);
+    }
+
 #if DEBUG_AST
     StmtPrinter stmtPrinter;
-    for (auto const &stmt : statements.first)
+    for (auto &stmt : statements)
     {
         std::cout << stmtPrinter.print(*stmt);
     }

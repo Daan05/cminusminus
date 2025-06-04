@@ -1,6 +1,5 @@
 #include "parser.hpp"
 
-#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -14,15 +13,16 @@
 static int rbp_offset = 8;
 
 Parser::Parser(std::vector<Token> tokens)
-    : m_had_error(false), m_tokens(std::move(tokens)), m_current(0)
+    : m_had_error(false),
+      m_tokens(std::move(tokens)),
+      m_current(0),
+      m_scope_depth(0)
 {
 }
 
 Parser::~Parser() {}
 
-std::pair<
-    std::vector<std::unique_ptr<Stmt>>, std::unordered_map<std::string, size_t>>
-Parser::parse()
+std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
     std::vector<std::unique_ptr<Stmt>> statements;
     while (!is_at_end())
@@ -38,7 +38,7 @@ Parser::parse()
     {
         error::fatal("Encountered an error during parsing pass");
     }
-    return {std::move(statements), variables};
+    return statements;
 }
 
 std::unique_ptr<Stmt> Parser::parse_decl()
@@ -70,17 +70,8 @@ std::unique_ptr<Stmt> Parser::parse_var_decl()
 
     consume(TokenType::SemiColon, "Expect ';' after variable declaration.");
 
-    if (variables.contains(token.lexeme))
-    {
-        error::synchronize(token.line, "Can't redefine variable");
-    }
-    else
-    {
-        variables[token.lexeme] = rbp_offset;
-    }
-
     auto stmt = std::make_unique<VarStmt>(
-        VarStmt(Var(token, rbp_offset), std::move(initializer))
+        VarStmt(LocalVar(token, m_scope_depth), std::move(initializer))
     );
     rbp_offset += 8;
     return stmt;
@@ -92,6 +83,10 @@ std::unique_ptr<Stmt> Parser::parse_stmt()
     {
         return parse_print_stmt();
     }
+    else if (match({TokenType::LeftBrace}))
+    {
+        return parse_block_stmt();
+    }
 
     return parse_expr_stmt();
 }
@@ -101,6 +96,26 @@ std::unique_ptr<Stmt> Parser::parse_print_stmt()
     auto value = parse_expr();
     consume(TokenType::SemiColon, "Expect ';' after value.");
     auto stmt = std::make_unique<PrintStmt>(PrintStmt(std::move(value)));
+    return stmt;
+}
+
+std::unique_ptr<Stmt> Parser::parse_block_stmt()
+{
+    // begin scope
+    m_scope_depth++;
+
+    std::vector<std::unique_ptr<Stmt>> statements = {};
+    while (!check(TokenType::RightBrace) && !is_at_end())
+    {
+        statements.push_back(parse_decl());
+    }
+    consume(TokenType::RightBrace, "Expect '}' after block.");
+
+    // end scope
+    m_scope_depth--;
+
+    std::unique_ptr<BlockStmt> stmt =
+        std::make_unique<BlockStmt>(BlockStmt(std::move(statements)));
     return stmt;
 }
 
@@ -124,17 +139,9 @@ std::unique_ptr<Expr> Parser::parse_assignment()
         if (auto *var_expr = dynamic_cast<VarExpr *>(expr.get()))
         {
             Token name = var_expr->var.token;
-            if (variables.contains(name.lexeme))
-            {
-                return std::make_unique<AssignExpr>(
-                    Var(name, variables[name.lexeme]), std::move(value),
-                    name.line
-                );
-            }
-            else
-            {
-                error::synchronize(name.line, "Undefined variable");
-            }
+            return std::make_unique<AssignExpr>(
+                LocalVar(name, m_scope_depth), std::move(value), name.line
+            );
         }
 
         error::synchronize(previous().line, "Invalid assignment target.");
@@ -235,18 +242,8 @@ std::unique_ptr<Expr> Parser::parse_primary()
     if (match({TokenType::Identifier}))
     {
         Token token = previous();
-        if (variables.contains(token.lexeme))
-        {
-            return std::make_unique<VarExpr>(
-                token, variables[token.lexeme], token.line
-            );
-        }
-        else
-        {
-            error::synchronize(
-                static_cast<int>(token.line), "Undefined variable"
-            );
-        }
+
+        return std::make_unique<VarExpr>(token, m_scope_depth, token.line);
     }
 
     if (match({TokenType::LeftParen}))
@@ -271,21 +268,6 @@ void Parser::synchronize()
         {
             return;
         }
-
-        // switch (peek().kind)
-        // {
-        // case TokenType::Struct:
-        // case TokenType::Fn:
-        // case TokenType::Let:
-        // case TokenType::For:
-        // case TokenType::If:
-        // case TokenType::While:
-        // case TokenType::Print:
-        // case TokenType::Return:
-        //     return;
-        // default:
-        //     return;
-        // }
 
         advance();
     }

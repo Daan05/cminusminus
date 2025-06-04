@@ -3,9 +3,9 @@
 
 #include <cstddef>
 #include <memory>
-#include <unordered_map>
 #include <utility>
 #include <vector>
+
 #include "common/expression.hpp"
 #include "common/statements.hpp"
 #include "common/token.hpp"
@@ -16,16 +16,14 @@ class Parser
     Parser(std::vector<Token> tokens);
     ~Parser();
 
-    std::pair<
-        std::vector<std::unique_ptr<Stmt>>,
-        std::unordered_map<std::string, size_t>>
-    parse();
+    std::vector<std::unique_ptr<Stmt>> parse(
+    );
 
    private:
     bool m_had_error;
     std::vector<Token> m_tokens;
     size_t m_current;
-    std::unordered_map<std::string, size_t> variables;
+    size_t m_scope_depth;
 
    private:
     std::unique_ptr<Stmt> parse_decl();
@@ -33,7 +31,10 @@ class Parser
 
     std::unique_ptr<Stmt> parse_stmt();
     std::unique_ptr<Stmt> parse_print_stmt();
+    std::unique_ptr<Stmt> parse_block_stmt();
     std::unique_ptr<Stmt> parse_expr_stmt();
+
+    std::unique_ptr<Stmt> parse_block();
 
     std::unique_ptr<Expr> parse_assignment();
     std::unique_ptr<Expr> parse_expr();

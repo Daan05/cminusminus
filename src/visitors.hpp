@@ -9,28 +9,49 @@
 class ExprPrinter : public ExprVisitor
 {
    public:
-    std::string print(Expr const &expr);
-    void visit_binary_expr(BinaryExpr const &expr) override;
-    void visit_literal_expr(LiteralExpr const &expr) override;
-    void visit_var_decl_expr(VarExpr const &expr) override;
-    void visit_assign_expr(AssignExpr const &expr) override;
-    void visit_unary_expr(UnaryExpr const &expr) override;
-    void visit_grouping_expr(GroupingExpr const &expr) override;
+    std::string print(Expr &expr);
+    void visit_binary_expr(BinaryExpr &expr) override;
+    void visit_literal_expr(LiteralExpr &expr) override;
+    void visit_var_expr(VarExpr &expr) override;
+    void visit_assign_expr(AssignExpr &expr) override;
+    void visit_unary_expr(UnaryExpr &expr) override;
+    void visit_grouping_expr(GroupingExpr &expr) override;
 
    private:
     std::ostringstream m_output;
 };
 
+class ExprAnalyzer : public ExprVisitor
+{
+   public:
+    ExprAnalyzer(std::vector<LocalVar> &vars, int scope_depth)
+        : m_vars(vars), m_scope_depth(scope_depth)
+    {
+    }
+
+    void analyze(Expr &expr);
+    void visit_binary_expr(BinaryExpr &expr) override;
+    void visit_literal_expr(LiteralExpr &expr) override;
+    void visit_var_expr(VarExpr &expr) override;
+    void visit_assign_expr(AssignExpr &expr) override;
+    void visit_unary_expr(UnaryExpr &expr) override;
+    void visit_grouping_expr(GroupingExpr &expr) override;
+
+   private:
+    std::vector<LocalVar> &m_vars;
+    int m_scope_depth;
+};
+
 class ExprCodeGenerator : public ExprVisitor
 {
    public:
-    std::string generate(Expr const &expr);
-    void visit_binary_expr(BinaryExpr const &expr) override;
-    void visit_literal_expr(LiteralExpr const &expr) override;
-    void visit_var_decl_expr(VarExpr const &expr) override;
-    void visit_assign_expr(AssignExpr const &expr) override;
-    void visit_unary_expr(UnaryExpr const &expr) override;
-    void visit_grouping_expr(GroupingExpr const &expr) override;
+    std::string generate(Expr &expr);
+    void visit_binary_expr(BinaryExpr &expr) override;
+    void visit_literal_expr(LiteralExpr &expr) override;
+    void visit_var_expr(VarExpr &expr) override;
+    void visit_assign_expr(AssignExpr &expr) override;
+    void visit_unary_expr(UnaryExpr &expr) override;
+    void visit_grouping_expr(GroupingExpr &expr) override;
 
    private:
     std::ostringstream m_output;
@@ -38,26 +59,44 @@ class ExprCodeGenerator : public ExprVisitor
 
 class StmtPrinter : public StmtVisitor
 {
-public:
-    std::string print(Stmt const &stmt);
-    void visit_print_stmt(PrintStmt const &stmt) override;
-    void visit_expr_stmt(ExprStmt const &stmt) override;
-    void visit_var_stmt(VarStmt const &stmt) override;
+   public:
+    std::string print(Stmt &stmt);
+    void visit_print_stmt(PrintStmt &stmt) override;
+    void visit_expr_stmt(ExprStmt &stmt) override;
+    void visit_var_stmt(VarStmt &stmt) override;
+    void visit_block_stmt(BlockStmt &stmt) override;
 
-private:
+   private:
     std::ostringstream m_output;
+};
+
+class StmtAnalyzer : public StmtVisitor
+{
+   public:
+    void analyze(Stmt &stmt);
+    void visit_print_stmt(PrintStmt &stmt) override;
+    void visit_expr_stmt(ExprStmt &stmt) override;
+    void visit_var_stmt(VarStmt &stmt) override;
+    void visit_block_stmt(BlockStmt &stmt) override;
+
+   private:
+    static std::vector<LocalVar> m_vars;
+    static int m_scope_depth;
 };
 
 class StmtCodeGenerator : public StmtVisitor
 {
-public:
-    std::string generate(Stmt const &stmt);
-    void visit_print_stmt(PrintStmt const &stmt) override;
-    void visit_expr_stmt(ExprStmt const &stmt) override;
-    void visit_var_stmt(VarStmt const &stmt) override;
+   public:
+    std::string generate(Stmt &stmt);
+    void visit_print_stmt(PrintStmt &stmt) override;
+    void visit_expr_stmt(ExprStmt &stmt) override;
+    void visit_var_stmt(VarStmt &stmt) override;
+    void visit_block_stmt(BlockStmt &stmt) override;
 
-private:
+   private:
     std::ostringstream m_output;
+    static std::vector<LocalVar> m_vars;
+    static int m_scope_depth;
 };
 
 #endif

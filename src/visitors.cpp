@@ -1,11 +1,13 @@
 #include "visitors.hpp"
 
 #include "common/error.hpp"
+#include "common/expression.hpp"
 
 #include <iostream>
 #include <string>
+#include <vector>
 
-std::string ExprPrinter::print(Expr const &expr)
+std::string ExprPrinter::print(Expr &expr)
 {
     m_output.clear();
     m_output.str("");
@@ -13,7 +15,7 @@ std::string ExprPrinter::print(Expr const &expr)
     return m_output.str();
 }
 
-void ExprPrinter::visit_binary_expr(BinaryExpr const &expr)
+void ExprPrinter::visit_binary_expr(BinaryExpr &expr)
 {
     m_output << "(" << expr.m_op.lexeme << " ";
     expr.m_left->accept(*this);
@@ -22,37 +24,100 @@ void ExprPrinter::visit_binary_expr(BinaryExpr const &expr)
     m_output << ")";
 }
 
-void ExprPrinter::visit_literal_expr(LiteralExpr const &expr)
+void ExprPrinter::visit_literal_expr(LiteralExpr &expr)
 {
     m_output << expr.token.literal.to_string();
 }
 
-void ExprPrinter::visit_var_decl_expr(VarExpr const &expr)
+void ExprPrinter::visit_var_expr(VarExpr &expr)
 {
-    m_output << expr.var.token.lexeme;
+    m_output << expr.var->token.lexeme;
 }
 
-void ExprPrinter::visit_assign_expr(AssignExpr const &expr)
+void ExprPrinter::visit_assign_expr(AssignExpr &expr)
 {
     m_output << expr.var.token.lexeme << " = ";
     expr.m_expr->accept(*this);
 }
 
-void ExprPrinter::visit_unary_expr(UnaryExpr const &expr)
+void ExprPrinter::visit_unary_expr(UnaryExpr &expr)
 {
     m_output << "(" << expr.m_op.lexeme << " ";
     expr.m_right->accept(*this);
     m_output << ")";
 }
 
-void ExprPrinter::visit_grouping_expr(GroupingExpr const &expr)
+void ExprPrinter::visit_grouping_expr(GroupingExpr &expr)
 {
     m_output << "(group ";
     expr.m_expr->accept(*this);
     m_output << ")";
 }
 
-std::string ExprCodeGenerator::generate(Expr const &expr)
+void ExprAnalyzer::analyze(Expr &expr) { expr.accept(*this); }
+
+void ExprAnalyzer::visit_binary_expr(BinaryExpr &expr)
+{
+    expr.m_left->accept(*this);
+    expr.m_right->accept(*this);
+}
+
+void ExprAnalyzer::visit_literal_expr(LiteralExpr &) {}
+
+void ExprAnalyzer::visit_var_expr(VarExpr &expr)
+{
+    bool is_declared = false;
+    for (int ix = m_vars.size() - 1; ix >= 0; --ix)
+    {
+        if (expr.var->token.lexeme == m_vars[ix].token.lexeme)
+        {
+            is_declared = true;
+            expr.var->rbp_offset = (ix + 1) * 8;
+            break;
+        }
+    }
+    if (!is_declared)
+    {
+        error::report(
+            expr.var->token.line,
+            "Undeclared variable '" + expr.var->token.lexeme + "'"
+        );
+    }
+}
+
+void ExprAnalyzer::visit_assign_expr(AssignExpr &expr)
+{
+    bool is_declared = false;
+    for (int ix = m_vars.size() - 1; ix >= 0; --ix)
+    {
+        if (expr.var.token.lexeme == m_vars[ix].token.lexeme)
+        {
+            is_declared = true;
+            expr.var.rbp_offset = (ix + 1) * 8;
+            break;
+        }
+    }
+    if (!is_declared)
+    {
+        error::report(
+            expr.var.token.line,
+            "Undeclared variable '" + expr.var.token.lexeme + "'"
+        );
+    }
+    expr.m_expr->accept(*this);
+}
+
+void ExprAnalyzer::visit_unary_expr(UnaryExpr &expr)
+{
+    expr.m_right->accept(*this);
+}
+
+void ExprAnalyzer::visit_grouping_expr(GroupingExpr &expr)
+{
+    expr.m_expr->accept(*this);
+}
+
+std::string ExprCodeGenerator::generate(Expr &expr)
 {
     m_output.clear();
     m_output.str("");
@@ -60,7 +125,7 @@ std::string ExprCodeGenerator::generate(Expr const &expr)
     return m_output.str();
 }
 
-void ExprCodeGenerator::visit_binary_expr(BinaryExpr const &expr)
+void ExprCodeGenerator::visit_binary_expr(BinaryExpr &expr)
 {
     expr.m_left->accept(*this);
     expr.m_right->accept(*this);
@@ -93,25 +158,25 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr const &expr)
     }
 }
 
-void ExprCodeGenerator::visit_literal_expr(LiteralExpr const &expr)
+void ExprCodeGenerator::visit_literal_expr(LiteralExpr &expr)
 {
     m_output << "\tpush " << expr.token.literal.to_string() << "\n";
 }
 
-void ExprCodeGenerator::visit_var_decl_expr(VarExpr const &expr)
+void ExprCodeGenerator::visit_var_expr(VarExpr &expr)
 {
-    m_output << "\tmov rax, qword [rbp - " << expr.var.rbp_offset << "]\n";
+    m_output << "\tmov rax, qword [rbp - " << expr.var->rbp_offset << "]\n";
     m_output << "\tpush rax\n";
 }
 
-void ExprCodeGenerator::visit_assign_expr(AssignExpr const &expr)
+void ExprCodeGenerator::visit_assign_expr(AssignExpr &expr)
 {
     expr.m_expr->accept(*this);
     m_output << "\tpop rax\n";
     m_output << "\tmov qword [rbp - " << expr.var.rbp_offset << "], rax\n";
 }
 
-void ExprCodeGenerator::visit_unary_expr(UnaryExpr const &expr)
+void ExprCodeGenerator::visit_unary_expr(UnaryExpr &expr)
 {
     expr.m_right->accept(*this);
     switch (expr.m_op.kind)
@@ -130,12 +195,12 @@ void ExprCodeGenerator::visit_unary_expr(UnaryExpr const &expr)
     }
 }
 
-void ExprCodeGenerator::visit_grouping_expr(GroupingExpr const &expr)
+void ExprCodeGenerator::visit_grouping_expr(GroupingExpr &expr)
 {
     expr.m_expr->accept(*this);
 }
 
-std::string StmtPrinter::print(Stmt const &stmt)
+std::string StmtPrinter::print(Stmt &stmt)
 {
     m_output.clear();
     m_output.str("");
@@ -143,21 +208,21 @@ std::string StmtPrinter::print(Stmt const &stmt)
     return m_output.str();
 }
 
-void StmtPrinter::visit_print_stmt(PrintStmt const &stmt)
+void StmtPrinter::visit_print_stmt(PrintStmt &stmt)
 {
     m_output << "PRINT: ";
     ExprPrinter exprPrinter;
     m_output << exprPrinter.print(*stmt.expr) << '\n';
 }
 
-void StmtPrinter::visit_expr_stmt(ExprStmt const &stmt)
+void StmtPrinter::visit_expr_stmt(ExprStmt &stmt)
 {
     m_output << "EXPR: ";
     ExprPrinter exprPrinter;
     m_output << exprPrinter.print(*stmt.expr) << '\n';
 }
 
-void StmtPrinter::visit_var_stmt(VarStmt const &stmt)
+void StmtPrinter::visit_var_stmt(VarStmt &stmt)
 {
     m_output << "VAR DECL: ";
     m_output << "let " << stmt.var.token.lexeme << " = ";
@@ -165,7 +230,75 @@ void StmtPrinter::visit_var_stmt(VarStmt const &stmt)
     m_output << exprPrinter.print(*stmt.expr) << '\n';
 }
 
-std::string StmtCodeGenerator::generate(Stmt const &stmt)
+void StmtPrinter::visit_block_stmt(BlockStmt &stmt)
+{
+    m_output << "START BLOCK\n";
+
+    StmtPrinter printer;
+    for (auto &stmt : stmt.statements)
+    {
+        m_output << "\t" << printer.print(*stmt);
+    }
+
+    m_output << "END BLOCK\n";
+}
+
+std::vector<LocalVar> StmtAnalyzer::m_vars = {};
+int StmtAnalyzer::m_scope_depth = 0;
+
+void StmtAnalyzer::analyze(Stmt &stmt) { stmt.accept(*this); }
+
+void StmtAnalyzer::visit_print_stmt(PrintStmt &stmt)
+{
+    ExprAnalyzer analyzer(m_vars, m_scope_depth);
+    analyzer.analyze(*stmt.expr);
+}
+
+void StmtAnalyzer::visit_expr_stmt(ExprStmt &stmt)
+{
+    ExprAnalyzer analyzer(m_vars, m_scope_depth);
+    analyzer.analyze(*stmt.expr);
+}
+
+void StmtAnalyzer::visit_var_stmt(VarStmt &stmt)
+{
+    for (int ix = m_vars.size() - 1; ix >= 0; --ix)
+    {
+        if (stmt.var.token.lexeme == m_vars[ix].token.lexeme &&
+            m_vars[ix].scope_depth == m_scope_depth)
+        {
+            error::report(stmt.var.token.line, "Already defined variable");
+        }
+    }
+    m_vars.push_back(stmt.var);
+    stmt.var.rbp_offset = m_vars.size() * 8;
+}
+
+void StmtAnalyzer::visit_block_stmt(BlockStmt &stmt)
+{
+    m_scope_depth++;
+
+    StmtAnalyzer analyzer;
+    for (auto &stmt : stmt.statements)
+    {
+        analyzer.analyze(*stmt);
+    }
+
+    for (int ix = m_vars.size() - 1; ix >= 0; --ix)
+    {
+        if (m_vars[ix].scope_depth >= m_scope_depth)
+        {
+            m_vars.pop_back();
+        }
+    }
+
+    m_scope_depth--;
+}
+
+std::vector<LocalVar> StmtCodeGenerator::m_vars = {};
+int StmtCodeGenerator::m_scope_depth = 0;
+
+std::string StmtCodeGenerator::generate(Stmt &stmt)
 {
     m_output.clear();
     m_output.str("");
@@ -173,7 +306,7 @@ std::string StmtCodeGenerator::generate(Stmt const &stmt)
     return m_output.str();
 }
 
-void StmtCodeGenerator::visit_print_stmt(PrintStmt const &stmt)
+void StmtCodeGenerator::visit_print_stmt(PrintStmt &stmt)
 {
     ExprCodeGenerator exprCodeGenerator;
     m_output << exprCodeGenerator.generate(*stmt.expr);
@@ -184,16 +317,25 @@ void StmtCodeGenerator::visit_print_stmt(PrintStmt const &stmt)
     m_output << "\tcall printf\n";
 }
 
-void StmtCodeGenerator::visit_expr_stmt(ExprStmt const &stmt)
+void StmtCodeGenerator::visit_expr_stmt(ExprStmt &stmt)
 {
     ExprCodeGenerator exprCodeGenerator;
     m_output << exprCodeGenerator.generate(*stmt.expr);
 }
 
-void StmtCodeGenerator::visit_var_stmt(VarStmt const &stmt)
+void StmtCodeGenerator::visit_var_stmt(VarStmt &stmt)
 {
     ExprCodeGenerator exprCodeGenerator;
     m_output << exprCodeGenerator.generate(*stmt.expr);
     m_output << "\tpop rax\n";
     m_output << "\tmov qword [rbp - " << stmt.var.rbp_offset << "], rax\n";
+}
+
+void StmtCodeGenerator::visit_block_stmt(BlockStmt &stmt)
+{
+    StmtCodeGenerator generator;
+    for (auto const &stmt : stmt.statements)
+    {
+        m_output << generator.generate(*stmt);
+    }
 }
