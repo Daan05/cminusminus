@@ -19,6 +19,7 @@ error::Synchronize::Synchronize(int line, std::string message)
 void error::unreachable()
 {
     auto trace = boost::stacktrace::stacktrace(0, 10);
+    std::cout << trace << '\n';
     throw Fatal("unreachable code was reached");
 }
 

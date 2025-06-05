@@ -33,6 +33,7 @@ class Parser
     std::unique_ptr<Stmt> parse_print_stmt();
     std::unique_ptr<Stmt> parse_block_stmt();
     std::unique_ptr<Stmt> parse_expr_stmt();
+    std::unique_ptr<Stmt> parse_if_stmt();
 
     std::unique_ptr<Stmt> parse_block();
 

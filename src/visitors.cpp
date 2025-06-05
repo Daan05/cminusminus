@@ -2,6 +2,7 @@
 
 #include "common/error.hpp"
 #include "common/expression.hpp"
+#include "common/token.hpp"
 
 #include <iostream>
 #include <string>
@@ -152,6 +153,15 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr &expr)
             "division"
         );
         break;
+    case TokenType::Less:
+        m_output << "\tsub rcx, rax\n";
+        m_output << "\tpush rcx\n";
+        break;
+    case TokenType::Greater:
+    case TokenType::LessEqual:
+    case TokenType::GreaterEqual:
+    case TokenType::EqualEqual:
+    case TokenType::BangEqual:
     default:
         error::unreachable();
         break;
@@ -243,6 +253,22 @@ void StmtPrinter::visit_block_stmt(BlockStmt &stmt)
     m_output << "END BLOCK\n";
 }
 
+void StmtPrinter::visit_if_stmt(IfStmt &stmt)
+{
+    m_output << "IF: ";
+    ExprPrinter expr_printer;
+    m_output << expr_printer.print(*stmt.condition) << '\n';
+
+    StmtPrinter printer;
+    m_output << "\t" << printer.print(*stmt.then_branch);
+    if (stmt.else_branch != nullptr)
+    {
+        m_output << "ELSE\n\t" << printer.print(*stmt.else_branch);
+    }
+
+    m_output << "END BLOCK\n";
+}
+
 std::vector<LocalVar> StmtAnalyzer::m_vars = {};
 int StmtAnalyzer::m_scope_depth = 0;
 
@@ -273,7 +299,9 @@ void StmtAnalyzer::visit_var_stmt(VarStmt &stmt)
     m_vars.push_back(stmt.var);
     if (m_vars.size() > 256)
     {
-        error::report(stmt.var.token.line, "Limit of 256 local vars has been exceeded");
+        error::report(
+            stmt.var.token.line, "Limit of 256 local vars has been exceeded"
+        );
     }
     stmt.var.rbp_offset = m_vars.size() * 8;
 }
@@ -299,8 +327,17 @@ void StmtAnalyzer::visit_block_stmt(BlockStmt &stmt)
     m_scope_depth--;
 }
 
-std::vector<LocalVar> StmtCodeGenerator::m_vars = {};
-int StmtCodeGenerator::m_scope_depth = 0;
+void StmtAnalyzer::visit_if_stmt(IfStmt &stmt)
+{
+    ExprAnalyzer expr_analyzer(m_vars, m_scope_depth);
+    expr_analyzer.analyze(*stmt.condition);
+
+    StmtAnalyzer analyzer;
+    analyzer.analyze(*stmt.then_branch);
+    analyzer.analyze(*stmt.else_branch);
+}
+
+int StmtCodeGenerator::m_label_count = 0;
 
 std::string StmtCodeGenerator::generate(Stmt &stmt)
 {
@@ -342,4 +379,25 @@ void StmtCodeGenerator::visit_block_stmt(BlockStmt &stmt)
     {
         m_output << generator.generate(*stmt);
     }
+}
+
+void StmtCodeGenerator::visit_if_stmt(IfStmt &stmt)
+{
+    m_output << "\t; if statement\n";
+    ExprCodeGenerator exprCodeGenerator;
+    m_output << exprCodeGenerator.generate(*stmt.condition);
+
+    // compare
+    m_output << "\tpop rax\n";
+    m_output << "\tcmp rax, 0\n";
+    m_output << "\tjl L" << m_label_count++ << "\n";
+
+    StmtCodeGenerator generator;
+    m_output << generator.generate(*stmt.else_branch);
+    m_output << "\tjmp L" << m_label_count << '\n';
+
+    m_output << "L" << m_label_count - 1 << ":\n";
+    m_output << generator.generate(*stmt.then_branch);
+
+    m_output << "L" << m_label_count << ":\n";
 }
