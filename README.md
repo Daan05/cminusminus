@@ -5,19 +5,21 @@ The only datatype is a 64 bit integer
 ## Example
 
 ``` rust
-let a = 3 * 7;
-a = 1;
-let b = 234 - 393 * a;
-b = b + 1;
+let res = 0;
 
-print a;
-print b;
-print -(a + b) + 201;
-
-print a; // prints 1
-{
-  let a = 2;
-  print a; // prints 2
+let i = 0;
+while (i < 10) {
+    let j = 0;
+    while (j < 10) {
+        res = res + 1;
+        j = j + 1;
+    }
+    i = i + 1;
 }
-print a; // prints 1
+
+if (res == 100) {
+    print res;
+} else {
+    print -1;
+}
 ```
