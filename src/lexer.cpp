@@ -1,6 +1,7 @@
 #include "lexer.hpp"
 
 #include <cctype>
+#include <iostream>
 #include <string>
 #include <vector>
 #include "common/error.hpp"
@@ -79,7 +80,21 @@ void Lexer::lex_token()
         add_token(TokenType::Star);
         break;
     case '/':
-        add_token(TokenType::Slash);
+        if (match('/'))
+        {
+            while (peek() != '\n' && !is_at_end())
+            {
+                advance();
+            }
+        }
+        else if (match('*'))
+        {
+            check_for_end_comment();
+        }
+        else
+        {
+            add_token(TokenType::Slash);
+        }
         break;
     case ',':
         add_token(TokenType::Comma);
@@ -232,4 +247,34 @@ char Lexer::peek_next()
     }
 
     return m_source[m_current + 1];
+}
+
+void Lexer::check_for_end_comment()
+{
+    int line = m_line;
+
+    while (!is_at_end())
+    {
+        if (peek() == '\n')
+        {
+            m_line += 1;
+        }
+        advance();
+
+        if (peek() == '/' && peek_next() == '*')
+        {
+            advance();
+            advance();
+            check_for_end_comment();
+        }
+        if (peek() == '*' && peek_next() == '/')
+        {
+            advance();
+            advance();
+            return;
+        }
+    }
+
+    error::report(line, "Unterminated multiline comment");
+    m_had_error = true;
 }

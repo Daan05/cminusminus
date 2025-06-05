@@ -39,6 +39,8 @@ class Lexer
     bool match(char expected);
     char peek();
     char peek_next();
+
+    void check_for_end_comment();
 };
 
 #endif
