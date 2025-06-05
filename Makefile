@@ -35,7 +35,7 @@ obj/%.cpp.o: %.cpp
 
 # Build and run the executable
 run: all
-	@valgrind --leak-check=full --log-file="valgrind.log" ./obj/$(OUTPUT) test.cp
+	@valgrind --track-origins=yes --leak-check=full --log-file="valgrind.log" ./obj/$(OUTPUT) test.cp
 
 # Assembles and runs the generated assembly file
 test: run

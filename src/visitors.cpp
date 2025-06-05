@@ -189,7 +189,25 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr &expr)
         m_output << "\tmovzx rax, al\n";
         m_output << "\tpush rax\n";
         break;
-
+    case TokenType::BoolAnd:
+        m_output << "\tcmp rcx, 0\n";
+        m_output << "\tsete cl\n";
+        m_output << "\tcmp rax, 0\n";
+        m_output << "\tsete al\n";
+        m_output << "\tor al, cl\n";
+        m_output << "\txor al, 1\n";
+        m_output << "\tmovzx rax, al\n";
+        m_output << "\tpush rax\n";
+        break;
+    case ::TokenType::BoolOr:
+        m_output << "\tcmp rcx, 0\n";
+        m_output << "\tsetne cl\n";
+        m_output << "\tcmp rax, 0\n";
+        m_output << "\tsetne al\n";
+        m_output << "\tor al, cl\n";
+        m_output << "\tmovzx rax, al\n";
+        m_output << "\tpush rax\n";
+        break;
     default:
         error::unreachable();
     }
@@ -413,22 +431,21 @@ void StmtCodeGenerator::visit_if_stmt(IfStmt &stmt)
     int else_label = m_label_count++;
     int end_label = m_label_count++;
 
-    ExprCodeGenerator exprCodeGenerator;
-    m_output << exprCodeGenerator.generate(*stmt.condition);
+    ExprCodeGenerator expr_generator;
+    m_output << expr_generator.generate(*stmt.condition);
 
     m_output << "\tpop rax\n";
     m_output << "\tcmp rax, 0\n";
     m_output << "\tje L" << else_label << "\n";
 
-    StmtCodeGenerator thenGen;
-    m_output << thenGen.generate(*stmt.then_branch);
+    StmtCodeGenerator stmt_generator;
+    m_output << stmt_generator.generate(*stmt.then_branch);
     m_output << "\tjmp L" << end_label << "\n";
 
     m_output << "L" << else_label << ":\n";
     if (stmt.else_branch != nullptr)
     {
-        StmtCodeGenerator elseGen;
-        m_output << elseGen.generate(*stmt.else_branch);
+        m_output << stmt_generator.generate(*stmt.else_branch);
     }
 
     m_output << "L" << end_label << ":\n";

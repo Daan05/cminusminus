@@ -1,6 +1,7 @@
 #include "token.hpp"
 
 #include <iostream>
+#include "error.hpp"
 
 constexpr std::string TT_to_string(TokenType kind)
 {
@@ -48,6 +49,18 @@ constexpr std::string TT_to_string(TokenType kind)
         return "Less";
     case TokenType::LessEqual:
         return "LessEqual";
+    case TokenType::BoolAnd:
+        return "BoolAnd";
+    case TokenType::BoolOr:
+        return "BoolOr";
+    case TokenType::LogicAnd:
+        return "LogicAnd";
+    case TokenType::LogicOr:
+        return "LogicOr";
+    case TokenType::LogicXor:
+        return "LogicXor";
+    case TokenType::LogicNeg:
+        return "LogicNeg";
     case TokenType::SemiColon:
         return "SemiColon";
     case TokenType::Colon:
@@ -77,7 +90,7 @@ constexpr std::string TT_to_string(TokenType kind)
     case TokenType::Eof:
         return "Eof";
     default:
-        // unreachable
+        error::unreachable();
         return "";
     }
 }

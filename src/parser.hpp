@@ -37,8 +37,10 @@ class Parser
 
     std::unique_ptr<Stmt> parse_block();
 
-    std::unique_ptr<Expr> parse_assignment();
     std::unique_ptr<Expr> parse_expr();
+    std::unique_ptr<Expr> parse_assignment();
+    std::unique_ptr<Expr> parse_or();
+    std::unique_ptr<Expr> parse_and();
     std::unique_ptr<Expr> parse_equality();
     std::unique_ptr<Expr> parse_comparison();
     std::unique_ptr<Expr> parse_term();

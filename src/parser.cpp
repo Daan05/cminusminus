@@ -1,5 +1,6 @@
 #include "parser.hpp"
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -144,13 +145,17 @@ std::unique_ptr<Stmt> Parser::parse_if_stmt()
         elseBranch = parse_stmt();
     }
 
-    auto stmt = std::make_unique<IfStmt>(IfStmt(std::move(condition), std::move(thenBranch), std::move(elseBranch)));
+    auto stmt = std::make_unique<IfStmt>(IfStmt(
+        std::move(condition), std::move(thenBranch), std::move(elseBranch)
+    ));
     return stmt;
 }
 
+std::unique_ptr<Expr> Parser::parse_expr() { return parse_assignment(); }
+
 std::unique_ptr<Expr> Parser::parse_assignment()
 {
-    auto expr = parse_equality();
+    auto expr = parse_or();
 
     if (match({TokenType::Equal}))
     {
@@ -171,7 +176,35 @@ std::unique_ptr<Expr> Parser::parse_assignment()
     return expr;
 }
 
-std::unique_ptr<Expr> Parser::parse_expr() { return parse_assignment(); }
+std::unique_ptr<Expr> Parser::parse_or()
+{
+    auto left = parse_and();
+
+    while (match({TokenType::BoolOr}))
+    {
+        Token op = previous();
+        auto right = parse_and();
+        auto expr = std::make_unique<BinaryExpr>(std::move(left), op, std::move(right), op.line);
+        return expr;
+    }
+
+    return left;
+}
+
+std::unique_ptr<Expr> Parser::parse_and()
+{
+    auto left = parse_equality();
+
+    while (match({TokenType::BoolAnd}))
+    {
+        Token op = previous();
+        auto right = parse_equality();
+        auto expr = std::make_unique<BinaryExpr>(std::move(left), op, std::move(right), op.line);
+        return expr;
+    }
+
+    return left;
+}
 
 std::unique_ptr<Expr> Parser::parse_equality()
 {
