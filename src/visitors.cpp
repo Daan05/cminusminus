@@ -153,18 +153,45 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr &expr)
             "division"
         );
         break;
+    case TokenType::EqualEqual:
+        m_output << "\tcmp rcx, rax\n";
+        m_output << "\tsete al\n";
+        m_output << "\tmovzx rax, al\n";
+        m_output << "\tpush rax\n";
+        break;
+    case TokenType::BangEqual:
+        m_output << "\tcmp rcx, rax\n";
+        m_output << "\tsetne al\n";
+        m_output << "\tmovzx rax, al\n";
+        m_output << "\tpush rax\n";
+        break;
     case TokenType::Less:
-        m_output << "\tsub rcx, rax\n";
-        m_output << "\tpush rcx\n";
+        m_output << "\tcmp rcx, rax\n";
+        m_output << "\tsetl al\n";
+        m_output << "\tmovzx rax, al\n";
+        m_output << "\tpush rax\n";
+        break;
+    case TokenType::LessEqual:
+        m_output << "\tcmp rcx, rax\n";
+        m_output << "\tsetle al\n";
+        m_output << "\tmovzx rax, al\n";
+        m_output << "\tpush rax\n";
         break;
     case TokenType::Greater:
-    case TokenType::LessEqual:
+        m_output << "\tcmp rcx, rax\n";
+        m_output << "\tsetg al\n";
+        m_output << "\tmovzx rax, al\n";
+        m_output << "\tpush rax\n";
+        break;
     case TokenType::GreaterEqual:
-    case TokenType::EqualEqual:
-    case TokenType::BangEqual:
+        m_output << "\tcmp rcx, rax\n";
+        m_output << "\tsetge al\n";
+        m_output << "\tmovzx rax, al\n";
+        m_output << "\tpush rax\n";
+        break;
+
     default:
         error::unreachable();
-        break;
     }
 }
 
@@ -383,21 +410,26 @@ void StmtCodeGenerator::visit_block_stmt(BlockStmt &stmt)
 
 void StmtCodeGenerator::visit_if_stmt(IfStmt &stmt)
 {
-    m_output << "\t; if statement\n";
+    int else_label = m_label_count++;
+    int end_label = m_label_count++;
+
     ExprCodeGenerator exprCodeGenerator;
     m_output << exprCodeGenerator.generate(*stmt.condition);
 
-    // compare
     m_output << "\tpop rax\n";
     m_output << "\tcmp rax, 0\n";
-    m_output << "\tjl L" << m_label_count++ << "\n";
+    m_output << "\tje L" << else_label << "\n";
 
-    StmtCodeGenerator generator;
-    m_output << generator.generate(*stmt.else_branch);
-    m_output << "\tjmp L" << m_label_count << '\n';
+    StmtCodeGenerator thenGen;
+    m_output << thenGen.generate(*stmt.then_branch);
+    m_output << "\tjmp L" << end_label << "\n";
 
-    m_output << "L" << m_label_count - 1 << ":\n";
-    m_output << generator.generate(*stmt.then_branch);
+    m_output << "L" << else_label << ":\n";
+    if (stmt.else_branch != nullptr)
+    {
+        StmtCodeGenerator elseGen;
+        m_output << elseGen.generate(*stmt.else_branch);
+    }
 
-    m_output << "L" << m_label_count << ":\n";
+    m_output << "L" << end_label << ":\n";
 }
