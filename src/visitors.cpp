@@ -189,7 +189,8 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr &expr)
         m_output << "\tmovzx rax, al\n";
         m_output << "\tpush rax\n";
         break;
-    case TokenType::BoolAnd:
+    case TokenType::BoolAnd: 
+        // TODO: short circuit evaluation
         m_output << "\tcmp rcx, 0\n";
         m_output << "\tsete cl\n";
         m_output << "\tcmp rax, 0\n";
@@ -200,6 +201,7 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr &expr)
         m_output << "\tpush rax\n";
         break;
     case ::TokenType::BoolOr:
+        // TODO: short circuit evaluation
         m_output << "\tcmp rcx, 0\n";
         m_output << "\tsetne cl\n";
         m_output << "\tcmp rax, 0\n";
