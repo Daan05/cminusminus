@@ -1,11 +1,2 @@
-let a = 0;
-print a;
-{
-    let a = 1;
-    print a;
-    {
-        let b = 4;
-        print b;
-    }
-}
+let a = 9;
 print a;

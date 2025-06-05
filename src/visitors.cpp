@@ -271,6 +271,10 @@ void StmtAnalyzer::visit_var_stmt(VarStmt &stmt)
         }
     }
     m_vars.push_back(stmt.var);
+    if (m_vars.size() > 256)
+    {
+        error::report(stmt.var.token.line, "Limit of 256 local vars has been exceeded");
+    }
     stmt.var.rbp_offset = m_vars.size() * 8;
 }
 
