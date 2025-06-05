@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <utility>
 #include <vector>
 
 #include "common/expression.hpp"

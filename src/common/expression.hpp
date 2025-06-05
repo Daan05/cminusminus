@@ -7,7 +7,8 @@
 
 struct LocalVar
 {
-    LocalVar(Token token, int scope_depth);
+    LocalVar(Token token, int scope_depth)
+        : token(token), scope_depth(scope_depth), rbp_offset(0) {};
     ~LocalVar() = default;
 
     Token token;
@@ -15,96 +16,60 @@ struct LocalVar
     int rbp_offset;
 };
 
-struct ExprVisitor
+struct Expr;
+
+struct BinaryExpr
 {
-   public:
-    virtual ~ExprVisitor() = default;
-    virtual void visit_binary_expr(struct BinaryExpr &expr) = 0;
-    virtual void visit_literal_expr(struct LiteralExpr &expr) = 0;
-    virtual void visit_var_expr(struct VarExpr &expr) = 0;
-    virtual void visit_assign_expr(struct AssignExpr &expr) = 0;
-    virtual void visit_unary_expr(struct UnaryExpr &expr) = 0;
-    virtual void visit_grouping_expr(struct GroupingExpr &expr) = 0;
+    size_t line;
+    std::unique_ptr<Expr> left;
+    Token op;
+    std::unique_ptr<Expr> right;
+};
+
+struct LiteralExpr
+{
+    size_t line;
+    Token token;
+};
+
+struct VarExpr
+{
+    size_t line;
+    LocalVar var;
+};
+
+struct AssignExpr
+{
+    size_t line;
+    LocalVar var;
+    std::unique_ptr<Expr> expr;
+};
+
+struct UnaryExpr
+{
+    size_t line;
+    Token op;
+    std::unique_ptr<Expr> right;
+};
+
+struct GroupingExpr
+{
+    size_t line;
+    std::unique_ptr<Expr> expr;
 };
 
 struct Expr
 {
-   public:
-    virtual ~Expr() = default;
-    int get_line() const;
-    virtual void accept(ExprVisitor &visitor) = 0;
+    using ExprVariant = std::variant<
+        BinaryExpr, LiteralExpr, VarExpr, AssignExpr, UnaryExpr, GroupingExpr>;
 
-    int m_line;
+    ExprVariant expr;
 
-   protected:
-    Expr(int line);
-};
-
-struct BinaryExpr : public Expr
-{
-   public:
-    BinaryExpr(
-        std::unique_ptr<Expr> left, Token op, std::unique_ptr<Expr> right,
-        int line
-    );
-
-    void accept(ExprVisitor &visitor) override;
-
-    std::unique_ptr<Expr> m_left;
-    Token m_op;
-    std::unique_ptr<Expr> m_right;
-};
-
-struct LiteralExpr : public Expr
-{
-   public:
-    LiteralExpr(Token token, int line);
-
-    void accept(ExprVisitor &visitor) override;
-
-    Token token;
-};
-
-struct VarExpr : public Expr
-{
-   public:
-    VarExpr(Token token, int scope_depth, int line);
-
-    void accept(ExprVisitor &visitor) override;
-
-    std::unique_ptr<LocalVar> var;
-};
-
-struct AssignExpr : public Expr
-{
-   public:
-    AssignExpr(LocalVar var, std::unique_ptr<Expr> expr, int line);
-
-    void accept(ExprVisitor &visitor) override;
-
-    LocalVar var;
-    std::unique_ptr<Expr> m_expr;
-};
-
-struct UnaryExpr : public Expr
-{
-   public:
-    UnaryExpr(Token op, std::unique_ptr<Expr> right, int line);
-
-    void accept(ExprVisitor &visitor) override;
-
-    Token m_op;
-    std::unique_ptr<Expr> m_right;
-};
-
-struct GroupingExpr : public Expr
-{
-   public:
-    GroupingExpr(std::unique_ptr<Expr> expr, int line);
-
-    void accept(ExprVisitor &visitor) override;
-
-    std::unique_ptr<Expr> m_expr;
+    template <typename T>
+        requires std::constructible_from<ExprVariant, T>
+    Expr(T &&v) : expr(std::forward<T>(v))
+    {
+    }
 };
 
 #endif

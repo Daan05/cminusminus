@@ -6,10 +6,11 @@
 #include "common/token.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "printer.hpp"
 #include "visitors.hpp"
 
 #define DEBUG_TOKENS 0
-#define DEBUG_AST 0
+#define DEBUG_AST 1
 
 int main(int argc, char **argv)
 try
@@ -37,24 +38,24 @@ try
     Parser parser(tokens);
     auto statements = parser.parse();
 
-    StmtAnalyzer analyzer;
-    for (auto &stmt : statements)
-    {
-        analyzer.analyze(*stmt);
-    }
+    // StmtAnalyzer analyzer;
+    // for (auto &stmt : statements)
+    // {
+    //     analyzer.analyze(*stmt);
+    // }
 
 #if DEBUG_AST
     StmtPrinter stmtPrinter;
-    for (auto &stmt : statements)
+    for (auto const &stmt : statements)
     {
         std::cout << stmtPrinter.print(*stmt);
     }
 #endif
 
-    CodeGenerator generator(std::move(statements));
-    std::string asm_code = generator.generate();
-
-    common::write_file("test.asm", asm_code);
+    // CodeGenerator generator(std::move(statements));
+    // std::string asm_code = generator.generate();
+    //
+    // common::write_file("test.asm", asm_code);
 }
 catch (error::Fatal const &error)
 {

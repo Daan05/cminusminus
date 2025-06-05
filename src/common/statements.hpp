@@ -28,10 +28,10 @@ struct Stmt
 struct ExprStmt : public Stmt
 {
    public:
-    ExprStmt(std::unique_ptr<Expr> expr);
+    ExprStmt(Expr expr);
     void accept(StmtVisitor &visitor) override;
 
-    std::unique_ptr<Expr> expr;
+    Expr expr;
 };
 
 struct PrintStmt : public Stmt

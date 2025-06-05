@@ -1,10 +1,9 @@
 #include "statements.hpp"
 
-#include <algorithm>
 #include <memory>
 #include <utility>
 
-ExprStmt::ExprStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)) {}
+ExprStmt::ExprStmt(Expr expr) : expr(std::move(expr)) {}
 
 void ExprStmt::accept(StmtVisitor &visitor) { visitor.visit_expr_stmt(*this); }
 
