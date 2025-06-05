@@ -1,11 +1,9 @@
 let a = 0;
-print a;
-{
-    let a = 1;
-    print a;
-    {
-        let b = 4;
-        print b;
-    }
+let b = 1;
+
+if (b == 1) {
+    print 1;
+} else {
+    print -1;
 }
-print a;
+

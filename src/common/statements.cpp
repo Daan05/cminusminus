@@ -1,5 +1,6 @@
 #include "statements.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -30,3 +31,15 @@ void BlockStmt::accept(StmtVisitor &visitor)
 {
     visitor.visit_block_stmt(*this);
 }
+
+IfStmt::IfStmt(
+    std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> then_branch,
+    std::unique_ptr<Stmt> else_branch
+)
+    : condition(std::move(condition)),
+      then_branch(std::move(then_branch)),
+      else_branch(std::move(else_branch))
+{
+}
+
+void IfStmt::accept(StmtVisitor &visitor) { visitor.visit_if_stmt(*this); }

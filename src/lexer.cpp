@@ -102,6 +102,14 @@ void Lexer::lex_token()
     case '>':
         add_token(match('=') ? TokenType::GreaterEqual : TokenType::Greater);
         break;
+    case '&':
+        add_token(match('&') ? TokenType::BoolAnd : TokenType::LogicAnd);
+        break;
+    case '|':
+        add_token(match('|') ? TokenType::BoolOr : TokenType::LogicOr);
+        break;
+    case '^':
+        add_token(TokenType::LogicXor);
     case ' ':
         break;
     case '\n':

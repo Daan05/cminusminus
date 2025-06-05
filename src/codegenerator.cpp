@@ -25,7 +25,7 @@ std::string CodeGenerator::generate()
     m_output << "\tpush rbp ; save caller's base pointer\n";
     m_output << "\tmov rbp, rsp ; set up a new base pointer frame for this "
                 "function\n\n";
-    m_output << "\tsub rsp, 64 ; Reserve stack space (8 64-bit vars)\n";
+    m_output << "\tsub rsp, 2048 ; Reserve stack space (256 64-bit vars)\n";
 
     StmtCodeGenerator stmtCodeGenerator;
     for (auto &stmt : m_statements)
@@ -33,7 +33,7 @@ std::string CodeGenerator::generate()
         m_output << stmtCodeGenerator.generate(*stmt);
     }
 
-    m_output << "\tadd rsp, 64 ; Restore stack\n";
+    m_output << "\tadd rsp, 2048 ; Restore stack\n";
     m_output << "\n\tmov rax, 0 ; return value\n";
     m_output << "\tpop rbp ; Restore caller's base pointer\n";
     m_output << "\tret ; Return to caller (exit program)\n";
