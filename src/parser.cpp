@@ -84,6 +84,10 @@ std::unique_ptr<Stmt> Parser::parse_stmt()
     {
         return parse_print_stmt();
     }
+    if (match({TokenType::While}))
+    {
+        return parse_while_stmt();
+    }
     else if (match({TokenType::LeftBrace}))
     {
         return parse_block_stmt();
@@ -151,6 +155,17 @@ std::unique_ptr<Stmt> Parser::parse_if_stmt()
     return stmt;
 }
 
+std::unique_ptr<Stmt> Parser::parse_while_stmt()
+{
+    consume(TokenType::LeftParen, "Expect '(' after 'while'.");
+    auto condition = parse_expr();
+    consume(TokenType::RightParen, "Expect ')' after condition.");
+    auto body = parse_stmt();
+
+    auto stmt = std::make_unique<WhileStmt>(std::move(condition), std::move(body));
+    return stmt;
+}
+
 std::unique_ptr<Expr> Parser::parse_expr() { return parse_assignment(); }
 
 std::unique_ptr<Expr> Parser::parse_assignment()
@@ -184,7 +199,9 @@ std::unique_ptr<Expr> Parser::parse_or()
     {
         Token op = previous();
         auto right = parse_and();
-        auto expr = std::make_unique<BinaryExpr>(std::move(left), op, std::move(right), op.line);
+        auto expr = std::make_unique<BinaryExpr>(
+            std::move(left), op, std::move(right), op.line
+        );
         return expr;
     }
 
@@ -199,7 +216,9 @@ std::unique_ptr<Expr> Parser::parse_and()
     {
         Token op = previous();
         auto right = parse_equality();
-        auto expr = std::make_unique<BinaryExpr>(std::move(left), op, std::move(right), op.line);
+        auto expr = std::make_unique<BinaryExpr>(
+            std::move(left), op, std::move(right), op.line
+        );
         return expr;
     }
 

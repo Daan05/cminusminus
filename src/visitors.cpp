@@ -189,7 +189,7 @@ void ExprCodeGenerator::visit_binary_expr(BinaryExpr &expr)
         m_output << "\tmovzx rax, al\n";
         m_output << "\tpush rax\n";
         break;
-    case TokenType::BoolAnd: 
+    case TokenType::BoolAnd:
         // TODO: short circuit evaluation
         m_output << "\tcmp rcx, 0\n";
         m_output << "\tsete cl\n";
@@ -312,8 +312,16 @@ void StmtPrinter::visit_if_stmt(IfStmt &stmt)
     {
         m_output << "ELSE\n\t" << printer.print(*stmt.else_branch);
     }
+}
 
-    m_output << "END BLOCK\n";
+void StmtPrinter::visit_while_stmt(WhileStmt &stmt)
+{
+    m_output << "WHILE: ";
+    ExprPrinter expr_printer;
+    m_output << expr_printer.print(*stmt.condition) << '\n';
+
+    StmtPrinter printer;
+    m_output << "\t" << printer.print(*stmt.body);
 }
 
 std::vector<LocalVar> StmtAnalyzer::m_vars = {};
@@ -363,12 +371,9 @@ void StmtAnalyzer::visit_block_stmt(BlockStmt &stmt)
         analyzer.analyze(*stmt);
     }
 
-    for (int ix = m_vars.size() - 1; ix >= 0; --ix)
+    while (!m_vars.empty() && m_vars.back().scope_depth >= m_scope_depth)
     {
-        if (m_vars[ix].scope_depth >= m_scope_depth)
-        {
-            m_vars.pop_back();
-        }
+        m_vars.pop_back();
     }
 
     m_scope_depth--;
@@ -382,6 +387,15 @@ void StmtAnalyzer::visit_if_stmt(IfStmt &stmt)
     StmtAnalyzer analyzer;
     analyzer.analyze(*stmt.then_branch);
     analyzer.analyze(*stmt.else_branch);
+}
+
+void StmtAnalyzer::visit_while_stmt(WhileStmt &stmt)
+{
+    ExprAnalyzer expr_analyzer(m_vars, m_scope_depth);
+    expr_analyzer.analyze(*stmt.condition);
+
+    StmtAnalyzer stmt_analyzer;
+    stmt_analyzer.analyze(*stmt.body);
 }
 
 int StmtCodeGenerator::m_label_count = 0;
@@ -449,6 +463,28 @@ void StmtCodeGenerator::visit_if_stmt(IfStmt &stmt)
     {
         m_output << stmt_generator.generate(*stmt.else_branch);
     }
+
+    m_output << "L" << end_label << ":\n";
+}
+
+void StmtCodeGenerator::visit_while_stmt(WhileStmt &stmt)
+{
+    int start_label = m_label_count++;
+    int end_label = m_label_count++;
+
+    m_output << "L" << start_label << ":\n";
+
+    ExprCodeGenerator expr_generator;
+    m_output << expr_generator.generate(*stmt.condition);
+
+    m_output << "\tpop rax\n";
+    m_output << "\tcmp rax, 0\n";
+    m_output << "\tje L" << end_label << "\n";
+
+    StmtCodeGenerator body_generator;
+    m_output << body_generator.generate(*stmt.body);
+
+    m_output << "\tjmp L" << start_label << "\n";
 
     m_output << "L" << end_label << ":\n";
 }

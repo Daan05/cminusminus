@@ -66,6 +66,7 @@ class StmtPrinter : public StmtVisitor
     void visit_var_stmt(VarStmt &stmt) override;
     void visit_block_stmt(BlockStmt &stmt) override;
     void visit_if_stmt(IfStmt &stmt) override;
+    void visit_while_stmt(WhileStmt &stmt) override;
 
    private:
     std::ostringstream m_output;
@@ -80,6 +81,7 @@ class StmtAnalyzer : public StmtVisitor
     void visit_var_stmt(VarStmt &stmt) override;
     void visit_block_stmt(BlockStmt &stmt) override;
     void visit_if_stmt(IfStmt &stmt) override;
+    void visit_while_stmt(WhileStmt &stmt) override;
 
    private:
     static std::vector<LocalVar> m_vars;
@@ -95,6 +97,7 @@ class StmtCodeGenerator : public StmtVisitor
     void visit_var_stmt(VarStmt &stmt) override;
     void visit_block_stmt(BlockStmt &stmt) override;
     void visit_if_stmt(IfStmt &stmt) override;
+    void visit_while_stmt(WhileStmt &stmt) override;
 
    private:
     std::ostringstream m_output;

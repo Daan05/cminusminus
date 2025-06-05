@@ -1,9 +1,13 @@
-let a = 0;
-let b = 1;
+let res = 0;
 
-if (b == 1) {
-    print 1;
-} else {
-    print -1;
+let i = 0;
+while (i < 10) {
+    let j = 0;
+    while (j < 10) {
+        res = res + 1;
+        j = j + 1;
+    }
+    i = i + 1;
 }
 
+print res;
