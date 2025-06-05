@@ -15,6 +15,7 @@ struct StmtVisitor
     virtual void visit_var_stmt(struct VarStmt &stmt) = 0;
     virtual void visit_block_stmt(struct BlockStmt &stmt) = 0;
     virtual void visit_if_stmt(struct IfStmt &stmt) = 0;
+    virtual void visit_while_stmt(struct WhileStmt &stmt) = 0;
 };
 
 struct Stmt
@@ -64,12 +65,25 @@ struct BlockStmt : public Stmt
 struct IfStmt : public Stmt
 {
    public:
-    IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> then_branch, std::unique_ptr<Stmt> else_branch);
+    IfStmt(
+        std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> then_branch,
+        std::unique_ptr<Stmt> else_branch
+    );
     void accept(StmtVisitor &visitor) override;
 
     std::unique_ptr<Expr> condition;
     std::unique_ptr<Stmt> then_branch;
     std::unique_ptr<Stmt> else_branch;
+};
+
+struct WhileStmt : public Stmt
+{
+   public:
+    WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body);
+    void accept(StmtVisitor &visitor) override;
+
+    std::unique_ptr<Expr> condition;
+    std::unique_ptr<Stmt> body;
 };
 
 #endif

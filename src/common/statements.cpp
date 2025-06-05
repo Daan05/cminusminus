@@ -43,3 +43,13 @@ IfStmt::IfStmt(
 }
 
 void IfStmt::accept(StmtVisitor &visitor) { visitor.visit_if_stmt(*this); }
+
+WhileStmt::WhileStmt(
+    std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body
+)
+    : condition(std::move(condition)),
+      body(std::move(body))
+{
+}
+
+void WhileStmt::accept(StmtVisitor &visitor) { visitor.visit_while_stmt(*this); }
