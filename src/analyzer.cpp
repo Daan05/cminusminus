@@ -2,6 +2,14 @@
 
 #include "common/error.hpp"
 
+void Analyzer::analyze(std::vector<std::unique_ptr<Stmt>> &statements)
+{
+    for (auto const &stmt : statements)
+    {
+        analyze_stmt(*stmt);
+    }
+}
+
 void Analyzer::analyze_expr(Expr &expr)
 {
     switch (expr.kind)

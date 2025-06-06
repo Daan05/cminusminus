@@ -12,6 +12,8 @@ class Analyzer
     Analyzer() : m_vars({}), m_scope_depth(0) {}
     ~Analyzer() = default;
 
+    void analyze(std::vector<std::unique_ptr<Stmt>> &statements);
+
     void analyze_expr(Expr &expr);
     void analyze_stmt(Stmt &stmt);
 

@@ -39,10 +39,7 @@ try
     auto statements = parser.parse();
 
     Analyzer analyzer;
-    for (auto &stmt : statements)
-    {
-        analyzer.analyze_stmt(*stmt);
-    }
+    analyzer.analyze(statements);
 
 #if DEBUG_AST
     Printer printer;
