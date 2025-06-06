@@ -1,8 +1,10 @@
 #include "printer.hpp"
 
+#include <sstream>
+
 #include "common/error.hpp"
 
-std::string ExprPrinter::print(const Expr &expr)
+std::string Printer::print_expr(const Expr &expr)
 {
     std::ostringstream oss;
 
@@ -10,8 +12,8 @@ std::string ExprPrinter::print(const Expr &expr)
     {
     case ExprType::Binary:
         oss << "(" << expr.variant.binary.op.lexeme << " "
-            << print(*expr.variant.binary.left) << " "
-            << print(*expr.variant.binary.right) << ")";
+            << print_expr(*expr.variant.binary.left) << " "
+            << print_expr(*expr.variant.binary.right) << ")";
         break;
     case ExprType::Literal:
         oss << expr.variant.literal.token.lexeme;
@@ -20,15 +22,15 @@ std::string ExprPrinter::print(const Expr &expr)
         oss << expr.variant.var.var.token.lexeme;
         break;
     case ExprType::Assign:
-        oss << "(assign " << expr.variant.assign.var.token.lexeme << " "
-            << print(*expr.variant.assign.expr) << ")";
+        oss << "(= " << expr.variant.assign.var.token.lexeme << " "
+            << print_expr(*expr.variant.assign.expr) << ")";
         break;
     case ExprType::Unary:
         oss << "(" << expr.variant.unary.op.lexeme << " "
-            << print(*expr.variant.unary.expr) << ")";
+            << print_expr(*expr.variant.unary.expr) << ")";
         break;
     case ExprType::Grouping:
-        oss << "(group " << print(*expr.variant.grouping.expr) << ")";
+        oss << "(group " << print_expr(*expr.variant.grouping.expr) << ")";
         break;
     default:
         error::unreachable();

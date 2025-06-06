@@ -22,23 +22,23 @@ std::string StmtPrinter::print(Stmt &stmt)
 void StmtPrinter::visit_print_stmt(PrintStmt &stmt)
 {
     m_output << "PRINT: ";
-    ExprPrinter printer;
-    m_output << printer.print(*stmt.expr) << '\n';
+    Printer printer;
+    m_output << printer.print_expr(*stmt.expr) << '\n';
 }
 
 void StmtPrinter::visit_expr_stmt(ExprStmt &stmt)
 {
     m_output << "EXPR: ";
-    ExprPrinter printer;
-    m_output << printer.print(*stmt.expr) << '\n';
+    Printer printer;
+    m_output << printer.print_expr(*stmt.expr) << '\n';
 }
 
 void StmtPrinter::visit_var_stmt(VarStmt &stmt)
 {
     m_output << "VAR DECL: ";
     m_output << "let " << stmt.var.token.lexeme << " = ";
-    ExprPrinter printer;
-    m_output << printer.print(*stmt.expr) << '\n';
+    Printer printer;
+    m_output << printer.print_expr(*stmt.expr) << '\n';
 }
 
 void StmtPrinter::visit_block_stmt(BlockStmt &stmt)
@@ -57,8 +57,8 @@ void StmtPrinter::visit_block_stmt(BlockStmt &stmt)
 void StmtPrinter::visit_if_stmt(IfStmt &stmt)
 {
     m_output << "IF: ";
-    ExprPrinter printer;
-    m_output << printer.print(*stmt.condition) << '\n';
+    Printer printer;
+    m_output << printer.print_expr(*stmt.condition) << '\n';
 
     StmtPrinter stmt_printer;
     m_output << "\t" << stmt_printer.print(*stmt.then_branch);
@@ -71,8 +71,8 @@ void StmtPrinter::visit_if_stmt(IfStmt &stmt)
 void StmtPrinter::visit_while_stmt(WhileStmt &stmt)
 {
     m_output << "WHILE: ";
-    ExprPrinter expr_printer;
-    m_output << expr_printer.print(*stmt.condition) << '\n';
+    Printer expr_printer;
+    m_output << expr_printer.print_expr(*stmt.condition) << '\n';
 
     StmtPrinter printer;
     m_output << "\t" << printer.print(*stmt.body);
