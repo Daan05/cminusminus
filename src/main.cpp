@@ -46,10 +46,7 @@ try
 
 #if DEBUG_AST
     Printer printer;
-    for (auto const &stmt : statements)
-    {
-        std::cout << printer.print_stmt(*stmt);
-    }
+    printer.print(statements);
 #endif
 
     // CodeGenerator generator(std::move(statements));

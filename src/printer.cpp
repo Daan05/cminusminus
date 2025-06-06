@@ -1,9 +1,18 @@
 #include "printer.hpp"
 
+#include <iostream>
 #include <sstream>
 
 #include "common/error.hpp"
 #include "common/statements.hpp"
+
+void Printer::print(std::vector<std::unique_ptr<Stmt>> const &statements)
+{
+    for (auto const &stmt : statements)
+    {
+        std::cout << print_stmt(*stmt);
+    }
+}
 
 std::string indent(int level) { return std::string(level * 4, ' '); }
 
