@@ -1,5 +1,7 @@
 let res = 0;
 
+let a = res * 7;
+
 let i = 0;
 while (i < 10) {
     let j = 0;
