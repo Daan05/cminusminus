@@ -1,73 +1,90 @@
 #include "expression.hpp"
 
-#include <memory>
-
-#include "token.hpp"
-
 LocalVar::LocalVar(Token token, int scope_depth)
     : token(token), scope_depth(scope_depth), rbp_offset(0) {};
 
-Expr::Expr(int line) : m_line(line) {}
-
 BinaryExpr::BinaryExpr(
-    std::unique_ptr<Expr> left, Token op, std::unique_ptr<Expr> right, int line
+    std::unique_ptr<Expr> left, Token &&op, std::unique_ptr<Expr> right
 )
-    : Expr(line),
-      m_left(std::move(left)),
-      m_op(std::move(op)),
-      m_right(std::move(right))
+    : left(std::move(left)), op(std::move(op)), right(std::move(right))
 {
 }
 
-void BinaryExpr::accept(ExprVisitor &visitor)
-{
-    visitor.visit_binary_expr(*this);
-}
+LiteralExpr::LiteralExpr(Token &&token) : token(std::move(token)) {}
 
-LiteralExpr::LiteralExpr(Token token, int line)
-    : Expr(line), token(std::move(token))
-{
-}
+VarExpr::VarExpr(LocalVar &&var) : var(std::move(var)) {}
 
-void LiteralExpr::accept(ExprVisitor &visitor)
-{
-    visitor.visit_literal_expr(*this);
-}
-
-VarExpr::VarExpr(Token token, int scope_depth, int line)
-    : Expr(line),
-      var(std::make_unique<LocalVar>(LocalVar(std::move(token), scope_depth)))
+AssignExpr::AssignExpr(LocalVar &&var, std::unique_ptr<Expr> expr)
+    : var(std::move(var)), expr(std::move(expr))
 {
 }
 
-void VarExpr::accept(ExprVisitor &visitor) { visitor.visit_var_expr(*this); }
-
-AssignExpr::AssignExpr(LocalVar var, std::unique_ptr<Expr> expr, int line)
-    : Expr(line), var(std::move(var)), m_expr(std::move(expr))
+UnaryExpr::UnaryExpr(Token &&op, std::unique_ptr<Expr> expr)
+    : op(std::move(op)), expr(std::move(expr))
 {
 }
 
-void AssignExpr::accept(ExprVisitor &visitor)
-{
-    visitor.visit_assign_expr(*this);
-}
-
-UnaryExpr::UnaryExpr(Token op, std::unique_ptr<Expr> right, int line)
-    : Expr(line), m_op(std::move(op)), m_right(std::move(right))
+GroupingExpr::GroupingExpr(std::unique_ptr<Expr> expr) : expr(std::move(expr))
 {
 }
 
-void UnaryExpr::accept(ExprVisitor &visitor)
+Expr::Expr(size_t line, BinaryExpr&& expr)
+    : line(line), kind(ExprType::Binary)
 {
-    visitor.visit_unary_expr(*this);
+    new (&variant.binary) BinaryExpr(std::move(expr));
 }
 
-GroupingExpr::GroupingExpr(std::unique_ptr<Expr> expr, int line)
-    : Expr(line), m_expr(std::move(expr))
+Expr::Expr(size_t line, LiteralExpr&& expr)
+    : line(line), kind(ExprType::Literal)
 {
+    new (&variant.literal) LiteralExpr(std::move(expr));
 }
 
-void GroupingExpr::accept(ExprVisitor &visitor)
+Expr::Expr(size_t line, VarExpr&& expr)
+    : line(line), kind(ExprType::Var)
 {
-    visitor.visit_grouping_expr(*this);
+    new (&variant.var) VarExpr(std::move(expr));
+}
+
+Expr::Expr(size_t line, AssignExpr&& expr)
+    : line(line), kind(ExprType::Assign)
+{
+    new (&variant.assign) AssignExpr(std::move(expr));
+}
+
+Expr::Expr(size_t line, UnaryExpr&& expr)
+    : line(line), kind(ExprType::Unary)
+{
+    new (&variant.unary) UnaryExpr(std::move(expr));
+}
+
+Expr::Expr(size_t line, GroupingExpr&& expr)
+    : line(line), kind(ExprType::Grouping)
+{
+    new (&variant.grouping) GroupingExpr(std::move(expr));
+}
+
+Expr::~Expr()
+{
+    switch (kind)
+    {
+    case ExprType::Binary:
+        variant.binary.~BinaryExpr();
+        break;
+    case ExprType::Literal:
+        variant.literal.~LiteralExpr();
+        break;
+    case ExprType::Var:
+        variant.var.~VarExpr();
+        break;
+    case ExprType::Assign:
+        variant.assign.~AssignExpr();
+        break;
+    case ExprType::Unary:
+        variant.unary.~UnaryExpr();
+        break;
+    case ExprType::Grouping:
+        variant.grouping.~GroupingExpr();
+        break;
+    }
 }

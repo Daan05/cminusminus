@@ -1,6 +1,7 @@
 #ifndef EXPRESSION_HPP
 #define EXPRESSION_HPP
 
+#include <cstddef>
 #include <memory>
 
 #include "token.hpp"
@@ -15,96 +16,103 @@ struct LocalVar
     int rbp_offset;
 };
 
-struct ExprVisitor
+enum class ExprType
 {
-   public:
-    virtual ~ExprVisitor() = default;
-    virtual void visit_binary_expr(struct BinaryExpr &expr) = 0;
-    virtual void visit_literal_expr(struct LiteralExpr &expr) = 0;
-    virtual void visit_var_expr(struct VarExpr &expr) = 0;
-    virtual void visit_assign_expr(struct AssignExpr &expr) = 0;
-    virtual void visit_unary_expr(struct UnaryExpr &expr) = 0;
-    virtual void visit_grouping_expr(struct GroupingExpr &expr) = 0;
+    Binary,
+    Literal,
+    Var,
+    Assign,
+    Unary,
+    Grouping,
 };
 
-struct Expr
+struct Expr;
+
+struct BinaryExpr
 {
-   public:
-    virtual ~Expr() = default;
-    int get_line() const;
-    virtual void accept(ExprVisitor &visitor) = 0;
-
-    int m_line;
-
-   protected:
-    Expr(int line);
-};
-
-struct BinaryExpr : public Expr
-{
-   public:
     BinaryExpr(
-        std::unique_ptr<Expr> left, Token op, std::unique_ptr<Expr> right,
-        int line
+        std::unique_ptr<Expr> left, Token &&op, std::unique_ptr<Expr> right
     );
+    BinaryExpr(BinaryExpr &&expr) = default;
+    ~BinaryExpr() = default;
 
-    void accept(ExprVisitor &visitor) override;
-
-    std::unique_ptr<Expr> m_left;
-    Token m_op;
-    std::unique_ptr<Expr> m_right;
+    std::unique_ptr<Expr> left;
+    Token op;
+    std::unique_ptr<Expr> right;
 };
 
-struct LiteralExpr : public Expr
+struct LiteralExpr
 {
-   public:
-    LiteralExpr(Token token, int line);
-
-    void accept(ExprVisitor &visitor) override;
+    LiteralExpr(Token &&token);
+    LiteralExpr(LiteralExpr &&expr) = default;
+    ~LiteralExpr() = default;
 
     Token token;
 };
 
-struct VarExpr : public Expr
+struct VarExpr
 {
-   public:
-    VarExpr(Token token, int scope_depth, int line);
-
-    void accept(ExprVisitor &visitor) override;
-
-    std::unique_ptr<LocalVar> var;
-};
-
-struct AssignExpr : public Expr
-{
-   public:
-    AssignExpr(LocalVar var, std::unique_ptr<Expr> expr, int line);
-
-    void accept(ExprVisitor &visitor) override;
+    VarExpr(LocalVar &&var);
+    VarExpr(VarExpr &&expr) = default;
+    ~VarExpr() = default;
 
     LocalVar var;
-    std::unique_ptr<Expr> m_expr;
 };
 
-struct UnaryExpr : public Expr
+struct AssignExpr
 {
-   public:
-    UnaryExpr(Token op, std::unique_ptr<Expr> right, int line);
+    AssignExpr(LocalVar &&var, std::unique_ptr<Expr> expr);
+    AssignExpr(AssignExpr &&expr) = default;
+    ~AssignExpr() = default;
 
-    void accept(ExprVisitor &visitor) override;
-
-    Token m_op;
-    std::unique_ptr<Expr> m_right;
+    LocalVar var;
+    std::unique_ptr<Expr> expr;
 };
 
-struct GroupingExpr : public Expr
+struct UnaryExpr
 {
-   public:
-    GroupingExpr(std::unique_ptr<Expr> expr, int line);
+    UnaryExpr(Token &&op, std::unique_ptr<Expr> expr);
+    UnaryExpr(UnaryExpr &&expr) = default;
+    ~UnaryExpr() = default;
 
-    void accept(ExprVisitor &visitor) override;
+    Token op;
+    std::unique_ptr<Expr> expr;
+};
 
-    std::unique_ptr<Expr> m_expr;
+struct GroupingExpr
+{
+    GroupingExpr(std::unique_ptr<Expr> expr);
+    GroupingExpr(GroupingExpr &&expr) = default;
+    ~GroupingExpr() = default;
+
+    std::unique_ptr<Expr> expr;
+};
+
+struct Expr
+{
+    Expr(size_t line, BinaryExpr &&expr);
+    Expr(size_t line, LiteralExpr &&expr);
+    Expr(size_t line, VarExpr &&expr);
+    Expr(size_t line, AssignExpr &&expr);
+    Expr(size_t line, UnaryExpr &&expr);
+    Expr(size_t line, GroupingExpr &&expr);
+    ~Expr();
+
+    size_t line;
+
+    ExprType kind;
+    union Variant
+    {
+        BinaryExpr binary;
+        LiteralExpr literal;
+        VarExpr var;
+        AssignExpr assign;
+        UnaryExpr unary;
+        GroupingExpr grouping;
+
+        Variant() {}
+        ~Variant() {}
+    } variant;
 };
 
 #endif

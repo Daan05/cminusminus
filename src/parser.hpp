@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <utility>
 #include <vector>
 
 #include "common/expression.hpp"
@@ -16,8 +15,7 @@ class Parser
     Parser(std::vector<Token> tokens);
     ~Parser();
 
-    std::vector<std::unique_ptr<Stmt>> parse(
-    );
+    std::vector<std::unique_ptr<Stmt>> parse();
 
    private:
     bool m_had_error;

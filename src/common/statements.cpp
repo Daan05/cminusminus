@@ -1,35 +1,19 @@
 #include "statements.hpp"
 
-#include <algorithm>
 #include <memory>
-#include <utility>
 
 ExprStmt::ExprStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)) {}
 
-void ExprStmt::accept(StmtVisitor &visitor) { visitor.visit_expr_stmt(*this); }
-
 PrintStmt::PrintStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)) {}
-
-void PrintStmt::accept(StmtVisitor &visitor)
-{
-    visitor.visit_print_stmt(*this);
-}
 
 VarStmt::VarStmt(LocalVar var, std::unique_ptr<Expr> expr)
     : var(std::move(var)), expr(std::move(expr))
 {
 }
 
-void VarStmt::accept(StmtVisitor &visitor) { visitor.visit_var_stmt(*this); }
-
 BlockStmt::BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
     : statements(std::move(statements))
 {
-}
-
-void BlockStmt::accept(StmtVisitor &visitor)
-{
-    visitor.visit_block_stmt(*this);
 }
 
 IfStmt::IfStmt(
@@ -42,14 +26,64 @@ IfStmt::IfStmt(
 {
 }
 
-void IfStmt::accept(StmtVisitor &visitor) { visitor.visit_if_stmt(*this); }
-
 WhileStmt::WhileStmt(
     std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body
 )
-    : condition(std::move(condition)),
-      body(std::move(body))
+    : condition(std::move(condition)), body(std::move(body))
 {
 }
 
-void WhileStmt::accept(StmtVisitor &visitor) { visitor.visit_while_stmt(*this); }
+Stmt::Stmt(size_t line, ExprStmt &&expr) : line(line), kind(StmtType::Expr)
+{
+    new (&variant.expr) ExprStmt(std::move(expr));
+}
+
+Stmt::Stmt(size_t line, PrintStmt &&expr) : line(line), kind(StmtType::Print)
+{
+    new (&variant.print) PrintStmt(std::move(expr));
+}
+
+Stmt::Stmt(size_t line, VarStmt &&expr) : line(line), kind(StmtType::Var)
+{
+    new (&variant.var) VarStmt(std::move(expr));
+}
+
+Stmt::Stmt(size_t line, BlockStmt &&expr) : line(line), kind(StmtType::Block)
+{
+    new (&variant.block) BlockStmt(std::move(expr));
+}
+
+Stmt::Stmt(size_t line, IfStmt &&expr) : line(line), kind(StmtType::If)
+{
+    new (&variant.if_) IfStmt(std::move(expr));
+}
+
+Stmt::Stmt(size_t line, WhileStmt &&expr) : line(line), kind(StmtType::While)
+{
+    new (&variant.while_) WhileStmt(std::move(expr));
+}
+
+Stmt::~Stmt()
+{
+    switch (kind)
+    {
+    case StmtType::Expr:
+        variant.expr.~ExprStmt();
+        break;
+    case StmtType::Print:
+        variant.print.~PrintStmt();
+        break;
+    case StmtType::Var:
+        variant.var.~VarStmt();
+        break;
+    case StmtType::Block:
+        variant.block.~BlockStmt();
+        break;
+    case StmtType::If:
+        variant.if_.~IfStmt();
+        break;
+    case StmtType::While:
+        variant.while_.~WhileStmt();
+        break;
+    }
+}

@@ -10,4 +10,8 @@ while (i < 10) {
     i = i + 1;
 }
 
-print res;
+if (res == 100) {
+    print res;
+} else {
+    print -1;
+}

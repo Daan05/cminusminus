@@ -1,26 +1,25 @@
-#ifndef CODEGENERATOR_HPP
-#define CODEGENERATOR_HPP
+#ifndef GENERATOR_HPP
+#define GENERATOR_HPP
 
 #include <memory>
-#include <sstream>
 #include <vector>
 
+#include "common/expression.hpp"
 #include "common/statements.hpp"
 
 class CodeGenerator
 {
    public:
-    CodeGenerator(std::vector<std::unique_ptr<Stmt>> statements);
-    ~CodeGenerator();
+    CodeGenerator() : m_label_count(0) {};
+    ~CodeGenerator() = default;
 
-    std::string generate();
+    std::string generate(std::vector<std::unique_ptr<Stmt>> const &statements);
+
+    std::string generate_expr(Expr const &expr);
+    std::string generate_stmt(Stmt const &stmt);
 
    private:
-    std::vector<std::unique_ptr<Stmt>> m_statements;
-    std::ostringstream m_output;
-
-   private:
-    // member function
+    size_t m_label_count;
 };
 
 #endif
