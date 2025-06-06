@@ -6,6 +6,7 @@
 #include "common/token.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "analyzer.hpp"
 #include "printer.hpp"
 
 #define DEBUG_TOKENS 0
@@ -37,11 +38,11 @@ try
     Parser parser(tokens);
     auto statements = parser.parse();
 
-    // StmtAnalyzer analyzer;
-    // for (auto &stmt : statements)
-    // {
-    //     analyzer.analyze(*stmt);
-    // }
+    Analyzer analyzer;
+    for (auto &stmt : statements)
+    {
+        analyzer.analyze_stmt(*stmt);
+    }
 
 #if DEBUG_AST
     Printer printer;

@@ -27,11 +27,11 @@ std::string CodeGenerator::generate()
                 "function\n\n";
     m_output << "\tsub rsp, 2048 ; Reserve stack space (256 64-bit vars)\n";
 
-    StmtCodeGenerator stmtCodeGenerator;
-    for (auto &stmt : m_statements)
-    {
-        m_output << stmtCodeGenerator.generate(*stmt);
-    }
+    // StmtCodeGenerator stmtCodeGenerator;
+    // for (auto &stmt : m_statements)
+    // {
+    //     m_output << stmtCodeGenerator.generate(*stmt);
+    // }
 
     m_output << "\tadd rsp, 2048 ; Restore stack\n";
     m_output << "\n\tmov rax, 0 ; return value\n";

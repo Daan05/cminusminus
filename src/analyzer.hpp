@@ -4,20 +4,19 @@
 #include <vector>
 
 #include "common/expression.hpp"
+#include "common/statements.hpp"
 
-class ExprAnalyzer
+class Analyzer
 {
    public:
-    ExprAnalyzer(std::vector<LocalVar> &vars, int scope_depth)
-        : m_vars(vars), m_scope_depth(scope_depth)
-    {
-    }
-    ~ExprAnalyzer() = default;
+    Analyzer() : m_vars({}), m_scope_depth(0) {}
+    ~Analyzer() = default;
 
-    void analyze(Expr &expr);
+    void analyze_expr(Expr &expr);
+    void analyze_stmt(Stmt &stmt);
 
    private:
-    std::vector<LocalVar> &m_vars;
+    std::vector<LocalVar> m_vars;
     int m_scope_depth;
 };
 
