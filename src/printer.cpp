@@ -3,8 +3,11 @@
 #include <sstream>
 
 #include "common/error.hpp"
+#include "common/statements.hpp"
 
-std::string Printer::print_expr(const Expr &expr)
+std::string indent(int level) { return std::string(level * 4, ' '); }
+
+std::string Printer::print_expr(Expr const &expr)
 {
     std::ostringstream oss;
 
@@ -31,6 +34,57 @@ std::string Printer::print_expr(const Expr &expr)
         break;
     case ExprType::Grouping:
         oss << "(group " << print_expr(*expr.variant.grouping.expr) << ")";
+        break;
+    default:
+        error::unreachable();
+        break;
+    }
+
+    return oss.str();
+}
+
+std::string Printer::print_stmt(Stmt const &stmt, int indent_level)
+{
+    std::ostringstream oss;
+    std::string pad = indent(indent_level);
+
+    switch (stmt.kind)
+    {
+    case StmtType::Expr:
+        oss << pad << "EXPR: ";
+        oss << print_expr(*stmt.variant.expr.expr) << '\n';
+        break;
+    case StmtType::Print:
+        oss << pad << "PRINT: ";
+        oss << print_expr(*stmt.variant.print.expr) << '\n';
+        break;
+    case StmtType::Var:
+        oss << pad << "VAR DECL: ";
+        oss << "let " << stmt.variant.var.var.token.lexeme << " = ";
+        oss << print_expr(*stmt.variant.var.expr) << '\n';
+        break;
+    case StmtType::Block:
+        oss << pad << "BLOCK {\n";
+        for (auto &s : stmt.variant.block.statements)
+        {
+            oss << print_stmt(*s, indent_level + 1);
+        }
+        oss << pad << "}\n";
+        break;
+    case StmtType::If:
+        oss << pad << "IF ";
+        oss << print_expr(*stmt.variant.if_.condition) << '\n';
+        oss << print_stmt(*stmt.variant.if_.then_branch, indent_level);
+        if (stmt.variant.if_.else_branch != nullptr)
+        {
+            oss << pad << "ELSE\n";
+            oss << print_stmt(*stmt.variant.if_.else_branch, indent_level);
+        }
+        break;
+    case StmtType::While:
+        oss << pad << "WHILE ";
+        oss << print_expr(*stmt.variant.while_.condition) << '\n';
+        oss << print_stmt(*stmt.variant.while_.body, indent_level);
         break;
     default:
         error::unreachable();

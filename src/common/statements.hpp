@@ -6,84 +6,105 @@
 
 #include "expression.hpp"
 
-struct StmtVisitor
+enum class StmtType
 {
-   public:
-    virtual ~StmtVisitor() = default;
-    virtual void visit_expr_stmt(struct ExprStmt &stmt) = 0;
-    virtual void visit_print_stmt(struct PrintStmt &stmt) = 0;
-    virtual void visit_var_stmt(struct VarStmt &stmt) = 0;
-    virtual void visit_block_stmt(struct BlockStmt &stmt) = 0;
-    virtual void visit_if_stmt(struct IfStmt &stmt) = 0;
-    virtual void visit_while_stmt(struct WhileStmt &stmt) = 0;
+    Expr,
+    Print,
+    Var,
+    Block,
+    If,
+    While,
 };
 
-struct Stmt
-{
-   public:
-    virtual ~Stmt() = default;
-    virtual void accept(StmtVisitor &visitor) = 0;
-};
+struct Stmt;
 
-struct ExprStmt : public Stmt
+struct ExprStmt
 {
-   public:
     ExprStmt(std::unique_ptr<Expr> expr);
-    void accept(StmtVisitor &visitor) override;
+    ExprStmt(ExprStmt &&stmt) = default;
+    ~ExprStmt() = default;
 
     std::unique_ptr<Expr> expr;
 };
 
-struct PrintStmt : public Stmt
+struct PrintStmt
 {
-   public:
     PrintStmt(std::unique_ptr<Expr> expr);
-    void accept(StmtVisitor &visitor) override;
+    PrintStmt(PrintStmt &&expr) = default;
+    ~PrintStmt() = default;
 
     std::unique_ptr<Expr> expr;
 };
 
-struct VarStmt : public Stmt
+struct VarStmt
 {
-   public:
     VarStmt(LocalVar var, std::unique_ptr<Expr> expr);
-    void accept(StmtVisitor &visitor) override;
+    VarStmt(VarStmt &&stmt) = default;
+    ~VarStmt() = default;
 
     LocalVar var;
     std::unique_ptr<Expr> expr;
 };
 
-struct BlockStmt : public Stmt
+struct BlockStmt
 {
-   public:
     BlockStmt(std::vector<std::unique_ptr<Stmt>> statements);
-    void accept(StmtVisitor &visitor) override;
+    BlockStmt(BlockStmt &&stmt) = default;
+    ~BlockStmt() = default;
 
     std::vector<std::unique_ptr<Stmt>> statements;
 };
 
-struct IfStmt : public Stmt
+struct IfStmt
 {
-   public:
     IfStmt(
         std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> then_branch,
         std::unique_ptr<Stmt> else_branch
     );
-    void accept(StmtVisitor &visitor) override;
+    IfStmt(IfStmt &&stmt) = default;
+    ~IfStmt() = default;
 
     std::unique_ptr<Expr> condition;
     std::unique_ptr<Stmt> then_branch;
     std::unique_ptr<Stmt> else_branch;
 };
 
-struct WhileStmt : public Stmt
+struct WhileStmt
 {
-   public:
     WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body);
-    void accept(StmtVisitor &visitor) override;
+    WhileStmt(WhileStmt &&stmt) = default;
+    ~WhileStmt() = default;
 
     std::unique_ptr<Expr> condition;
     std::unique_ptr<Stmt> body;
+};
+
+
+struct Stmt
+{
+    Stmt(size_t line, ExprStmt &&expr);
+    Stmt(size_t line, PrintStmt &&expr);
+    Stmt(size_t line, VarStmt &&expr);
+    Stmt(size_t line, BlockStmt &&expr);
+    Stmt(size_t line, IfStmt &&expr);
+    Stmt(size_t line, WhileStmt &&expr);
+    ~Stmt();
+
+    size_t line;
+
+    StmtType kind;
+    union Variant
+    {
+        ExprStmt expr;
+        PrintStmt print;
+        VarStmt var;
+        BlockStmt block;
+        IfStmt if_;
+        WhileStmt while_;
+
+        Variant() {}
+        ~Variant() {}
+    } variant;
 };
 
 #endif

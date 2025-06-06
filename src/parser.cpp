@@ -10,8 +10,6 @@
 #include "common/statements.hpp"
 #include "common/token.hpp"
 
-static int rbp_offset = 8;
-
 Parser::Parser(std::vector<Token> tokens)
     : m_had_error(false),
       m_tokens(std::move(tokens)),
@@ -70,11 +68,10 @@ std::unique_ptr<Stmt> Parser::parse_var_decl()
 
     consume(TokenType::SemiColon, "Expect ';' after variable declaration.");
 
-    auto stmt = std::make_unique<VarStmt>(
+    return std::make_unique<Stmt>(
+        previous().line,
         VarStmt(LocalVar(token, m_scope_depth), std::move(initializer))
     );
-    rbp_offset += 8;
-    return stmt;
 }
 
 std::unique_ptr<Stmt> Parser::parse_stmt()
@@ -103,8 +100,7 @@ std::unique_ptr<Stmt> Parser::parse_print_stmt()
 {
     auto value = parse_expr();
     consume(TokenType::SemiColon, "Expect ';' after value.");
-    auto stmt = std::make_unique<PrintStmt>(PrintStmt(std::move(value)));
-    return stmt;
+    return std::make_unique<Stmt>(previous().line, PrintStmt(std::move(value)));
 }
 
 std::unique_ptr<Stmt> Parser::parse_block_stmt()
@@ -122,17 +118,16 @@ std::unique_ptr<Stmt> Parser::parse_block_stmt()
     // end scope
     m_scope_depth--;
 
-    std::unique_ptr<BlockStmt> stmt =
-        std::make_unique<BlockStmt>(BlockStmt(std::move(statements)));
-    return stmt;
+    return std::make_unique<Stmt>(
+        previous().line, BlockStmt(std::move(statements))
+    );
 }
 
 std::unique_ptr<Stmt> Parser::parse_expr_stmt()
 {
     auto expr = parse_expr();
     consume(TokenType::SemiColon, "Expect ';' after expression.");
-    auto stmt = std::make_unique<ExprStmt>(ExprStmt(std::move(expr)));
-    return stmt;
+    return std::make_unique<Stmt>(previous().line, ExprStmt(std::move(expr)));
 }
 
 std::unique_ptr<Stmt> Parser::parse_if_stmt()
@@ -148,10 +143,12 @@ std::unique_ptr<Stmt> Parser::parse_if_stmt()
         elseBranch = parse_stmt();
     }
 
-    auto stmt = std::make_unique<IfStmt>(IfStmt(
-        std::move(condition), std::move(thenBranch), std::move(elseBranch)
-    ));
-    return stmt;
+    return std::make_unique<Stmt>(
+        previous().line,
+        IfStmt(
+            std::move(condition), std::move(thenBranch), std::move(elseBranch)
+        )
+    );
 }
 
 std::unique_ptr<Stmt> Parser::parse_while_stmt()
@@ -161,9 +158,9 @@ std::unique_ptr<Stmt> Parser::parse_while_stmt()
     consume(TokenType::RightParen, "Expect ')' after condition.");
     auto body = parse_stmt();
 
-    auto stmt =
-        std::make_unique<WhileStmt>(std::move(condition), std::move(body));
-    return stmt;
+    return std::make_unique<Stmt>(
+        previous().line, WhileStmt(std::move(condition), std::move(body))
+    );
 }
 
 std::unique_ptr<Expr> Parser::parse_expr() { return parse_assignment(); }

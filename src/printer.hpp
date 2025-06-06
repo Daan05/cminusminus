@@ -4,6 +4,7 @@
 #include <string>
 
 #include "common/expression.hpp"
+#include "common/statements.hpp"
 
 class Printer
 {
@@ -12,6 +13,7 @@ class Printer
     ~Printer() = default;
 
     std::string print_expr(Expr const &expr);
+    std::string print_stmt(Stmt const &stmt, int indent_level = 0);
 };
 
 #endif
