@@ -10,7 +10,7 @@
 #include "printer.hpp"
 
 #define DEBUG_TOKENS 0
-#define DEBUG_AST 1
+#define DEBUG_AST 0
 
 int main(int argc, char **argv)
 try
@@ -46,10 +46,10 @@ try
     printer.print(statements);
 #endif
 
-    // CodeGenerator generator(std::move(statements));
-    // std::string asm_code = generator.generate();
-    //
-    // common::write_file("test.asm", asm_code);
+    CodeGenerator generator;
+    std::string asm_code = generator.generate(statements);
+
+    common::write_file("test.asm", asm_code);
 }
 catch (error::Fatal const &error)
 {
