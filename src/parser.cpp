@@ -1,6 +1,5 @@
 #include "parser.hpp"
 
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -132,7 +131,7 @@ std::unique_ptr<Stmt> Parser::parse_expr_stmt()
 {
     auto expr = parse_expr();
     consume(TokenType::SemiColon, "Expect ';' after expression.");
-    auto stmt = std::make_unique<ExprStmt>(ExprStmt(std::move(*expr)));
+    auto stmt = std::make_unique<ExprStmt>(ExprStmt(std::move(expr)));
     return stmt;
 }
 
@@ -178,15 +177,14 @@ std::unique_ptr<Expr> Parser::parse_assignment()
         Token equals = previous();
         auto value = parse_assignment();
 
-        if (std::holds_alternative<VarExpr>(expr->expr))
+        if (expr->kind == ExprType::Var)
         {
-            VarExpr& var_expr = std::get<VarExpr>(expr->expr);
+            VarExpr &var_expr = expr->variant.var;
             Token name = var_expr.var.token;
-            return std::make_unique<Expr>(AssignExpr{
-                .line = name.line,
-                .var = std::move(LocalVar(name, m_scope_depth)),
-                .expr = std::move(value),
-            });
+            return std::make_unique<Expr>(
+                name.line,
+                AssignExpr(LocalVar(name, m_scope_depth), std::move(value))
+            );
         }
 
         error::synchronize(previous().line, "Invalid assignment target.");
@@ -203,12 +201,10 @@ std::unique_ptr<Expr> Parser::parse_or()
     {
         Token op = previous();
         auto right = parse_and();
-        auto expr = std::make_unique<Expr>(BinaryExpr{
-            .line = op.line,
-            .left = std::move(left),
-            .op = std::move(op),
-            .right = std::move(right)
-        });
+        auto expr = std::make_unique<Expr>(
+            op.line,
+            BinaryExpr(std::move(left), std::move(op), std::move(right))
+        );
         return expr;
     }
 
@@ -223,12 +219,10 @@ std::unique_ptr<Expr> Parser::parse_and()
     {
         Token op = previous();
         auto right = parse_equality();
-        auto expr = std::make_unique<Expr>(BinaryExpr{
-            .line = op.line,
-            .left = std::move(left),
-            .op = std::move(op),
-            .right = std::move(right)
-        });
+        auto expr = std::make_unique<Expr>(
+            op.line,
+            BinaryExpr(std::move(left), std::move(op), std::move(right))
+        );
         return expr;
     }
 
@@ -243,12 +237,10 @@ std::unique_ptr<Expr> Parser::parse_equality()
     {
         Token op = previous();
         auto right = parse_comparison();
-        expr = std::make_unique<Expr>(BinaryExpr{
-            .line = op.line,
-            .left = std::move(expr),
-            .op = std::move(op),
-            .right = std::move(right)
-        });
+        expr = std::make_unique<Expr>(
+            op.line,
+            BinaryExpr(std::move(expr), std::move(op), std::move(right))
+        );
     }
 
     return expr;
@@ -265,12 +257,10 @@ std::unique_ptr<Expr> Parser::parse_comparison()
     {
         Token op = previous();
         auto right = parse_term();
-        expr = std::make_unique<Expr>(BinaryExpr{
-            .line = op.line,
-            .left = std::move(expr),
-            .op = std::move(op),
-            .right = std::move(right)
-        });
+        expr = std::make_unique<Expr>(
+            op.line,
+            BinaryExpr(std::move(expr), std::move(op), std::move(right))
+        );
     }
 
     return expr;
@@ -284,12 +274,10 @@ std::unique_ptr<Expr> Parser::parse_term()
     {
         Token op = previous();
         auto right = parse_factor();
-        expr = std::make_unique<Expr>(BinaryExpr{
-            .line = op.line,
-            .left = std::move(expr),
-            .op = std::move(op),
-            .right = std::move(right)
-        });
+        expr = std::make_unique<Expr>(
+            op.line,
+            BinaryExpr(std::move(expr), std::move(op), std::move(right))
+        );
     }
 
     return expr;
@@ -303,12 +291,10 @@ std::unique_ptr<Expr> Parser::parse_factor()
     {
         Token op = previous();
         auto right = parse_unary();
-        expr = std::make_unique<Expr>(BinaryExpr{
-            .line = op.line,
-            .left = std::move(expr),
-            .op = std::move(op),
-            .right = std::move(right),
-        });
+        expr = std::make_unique<Expr>(
+            op.line,
+            BinaryExpr(std::move(expr), std::move(op), std::move(right))
+        );
     }
 
     return expr;
@@ -320,9 +306,9 @@ std::unique_ptr<Expr> Parser::parse_unary()
     {
         Token op = previous();
         auto right = parse_unary();
-        return std::make_unique<Expr>(UnaryExpr{
-            .line = op.line, .op = std::move(op), .right = std::move(right)
-        });
+        return std::make_unique<Expr>(
+            op.line, UnaryExpr(std::move(op), std::move(right))
+        );
     }
 
     return parse_primary();
@@ -334,16 +320,16 @@ std::unique_ptr<Expr> Parser::parse_primary()
     {
         Token token = previous();
         return std::make_unique<Expr>(
-            LiteralExpr{.line = token.line, .token = token}
+            token.line, LiteralExpr(std::move(token))
         );
     }
 
     if (match({TokenType::Identifier}))
     {
         Token token = previous();
-        return std::make_unique<Expr>(VarExpr{
-            .line = token.line, .var = std::move(LocalVar(token, m_scope_depth))
-        });
+        return std::make_unique<Expr>(
+            token.line, VarExpr(LocalVar(token, m_scope_depth))
+        );
     }
 
     if (match({TokenType::LeftParen}))
@@ -352,7 +338,7 @@ std::unique_ptr<Expr> Parser::parse_primary()
         auto expr = parse_expr();
         consume(TokenType::RightParen, "Expect ')' after expression");
         return std::make_unique<Expr>(
-            GroupingExpr{.line = paren.line, .expr = std::move(expr)}
+            paren.line, GroupingExpr(std::move(expr))
         );
     }
 

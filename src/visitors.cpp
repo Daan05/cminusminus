@@ -4,6 +4,8 @@
 #include "common/expression.hpp"
 #include "common/token.hpp"
 #include "printer.hpp"
+#include "generator.hpp"
+#include "analyzer.hpp"
 
 #include <iostream>
 #include <string>
@@ -20,23 +22,23 @@ std::string StmtPrinter::print(Stmt &stmt)
 void StmtPrinter::visit_print_stmt(PrintStmt &stmt)
 {
     m_output << "PRINT: ";
-    ExprPrinter exprPrinter;
-    m_output << exprPrinter.print(*stmt.expr) << '\n';
+    ExprPrinter printer;
+    m_output << printer.print(*stmt.expr) << '\n';
 }
 
 void StmtPrinter::visit_expr_stmt(ExprStmt &stmt)
 {
     m_output << "EXPR: ";
-    ExprPrinter exprPrinter;
-    m_output << exprPrinter.print(stmt.expr) << '\n';
+    ExprPrinter printer;
+    m_output << printer.print(*stmt.expr) << '\n';
 }
 
 void StmtPrinter::visit_var_stmt(VarStmt &stmt)
 {
     m_output << "VAR DECL: ";
     m_output << "let " << stmt.var.token.lexeme << " = ";
-    ExprPrinter exprPrinter;
-    m_output << exprPrinter.print(*stmt.expr) << '\n';
+    ExprPrinter printer;
+    m_output << printer.print(*stmt.expr) << '\n';
 }
 
 void StmtPrinter::visit_block_stmt(BlockStmt &stmt)
@@ -55,14 +57,14 @@ void StmtPrinter::visit_block_stmt(BlockStmt &stmt)
 void StmtPrinter::visit_if_stmt(IfStmt &stmt)
 {
     m_output << "IF: ";
-    ExprPrinter expr_printer;
-    m_output << expr_printer.print(*stmt.condition) << '\n';
+    ExprPrinter printer;
+    m_output << printer.print(*stmt.condition) << '\n';
 
-    StmtPrinter printer;
-    m_output << "\t" << printer.print(*stmt.then_branch);
+    StmtPrinter stmt_printer;
+    m_output << "\t" << stmt_printer.print(*stmt.then_branch);
     if (stmt.else_branch != nullptr)
     {
-        m_output << "ELSE\n\t" << printer.print(*stmt.else_branch);
+        m_output << "ELSE\n\t" << stmt_printer.print(*stmt.else_branch);
     }
 }
 
@@ -81,12 +83,16 @@ int StmtAnalyzer::m_scope_depth = 0;
 
 void StmtAnalyzer::analyze(Stmt &stmt) { stmt.accept(*this); }
 
-void StmtAnalyzer::visit_print_stmt(PrintStmt &)
+void StmtAnalyzer::visit_print_stmt(PrintStmt &stmt)
 {
+    ExprAnalyzer analyzer(m_vars, m_scope_depth);
+    analyzer.analyze(*stmt.expr);
 }
 
-void StmtAnalyzer::visit_expr_stmt(ExprStmt &)
+void StmtAnalyzer::visit_expr_stmt(ExprStmt &stmt)
 {
+    ExprAnalyzer analyzer(m_vars, m_scope_depth);
+    analyzer.analyze(*stmt.expr);
 }
 
 void StmtAnalyzer::visit_var_stmt(VarStmt &stmt)
@@ -129,6 +135,9 @@ void StmtAnalyzer::visit_block_stmt(BlockStmt &stmt)
 
 void StmtAnalyzer::visit_if_stmt(IfStmt &stmt)
 {
+    ExprAnalyzer expr_analyzer(m_vars, m_scope_depth);
+    expr_analyzer.analyze(*stmt.condition);
+
     StmtAnalyzer analyzer;
     analyzer.analyze(*stmt.then_branch);
     analyzer.analyze(*stmt.else_branch);
@@ -136,6 +145,9 @@ void StmtAnalyzer::visit_if_stmt(IfStmt &stmt)
 
 void StmtAnalyzer::visit_while_stmt(WhileStmt &stmt)
 {
+    ExprAnalyzer expr_analyzer(m_vars, m_scope_depth);
+    expr_analyzer.analyze(*stmt.condition);
+
     StmtAnalyzer stmt_analyzer;
     stmt_analyzer.analyze(*stmt.body);
 }
@@ -150,8 +162,10 @@ std::string StmtCodeGenerator::generate(Stmt &stmt)
     return m_output.str();
 }
 
-void StmtCodeGenerator::visit_print_stmt(PrintStmt &)
+void StmtCodeGenerator::visit_print_stmt(PrintStmt &stmt)
 {
+    ExprCodeGenerator expr_generator;
+    m_output << expr_generator.generate(*stmt.expr);
     m_output << "\tmov rdi, fmt ; 1st argument (format string)\n";
     m_output << "\tpop rsi ; 2nd argument (integer to print)\n";
     m_output << "\txor eax, eax ; Clear RAX: required before calling variadic "
@@ -159,12 +173,16 @@ void StmtCodeGenerator::visit_print_stmt(PrintStmt &)
     m_output << "\tcall printf\n";
 }
 
-void StmtCodeGenerator::visit_expr_stmt(ExprStmt &)
+void StmtCodeGenerator::visit_expr_stmt(ExprStmt &stmt)
 {
+    ExprCodeGenerator expr_generator;
+    m_output << expr_generator.generate(*stmt.expr);
 }
 
 void StmtCodeGenerator::visit_var_stmt(VarStmt &stmt)
 {
+    ExprCodeGenerator expr_generator;
+    m_output << expr_generator.generate(*stmt.expr);
     m_output << "\tpop rax\n";
     m_output << "\tmov qword [rbp - " << stmt.var.rbp_offset << "], rax\n";
 }
@@ -183,6 +201,8 @@ void StmtCodeGenerator::visit_if_stmt(IfStmt &stmt)
     int else_label = m_label_count++;
     int end_label = m_label_count++;
 
+    ExprCodeGenerator expr_generator;
+    m_output << expr_generator.generate(*stmt.condition);
 
     m_output << "\tpop rax\n";
     m_output << "\tcmp rax, 0\n";
@@ -207,6 +227,9 @@ void StmtCodeGenerator::visit_while_stmt(WhileStmt &stmt)
     int end_label = m_label_count++;
 
     m_output << "L" << start_label << ":\n";
+
+    ExprCodeGenerator expr_generator;
+    m_output << expr_generator.generate(*stmt.condition);
 
     m_output << "\tpop rax\n";
     m_output << "\tcmp rax, 0\n";

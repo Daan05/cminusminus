@@ -1,14 +1,14 @@
 #ifndef EXPRESSION_HPP
 #define EXPRESSION_HPP
 
+#include <cstddef>
 #include <memory>
 
 #include "token.hpp"
 
 struct LocalVar
 {
-    LocalVar(Token token, int scope_depth)
-        : token(token), scope_depth(scope_depth), rbp_offset(0) {};
+    LocalVar(Token token, int scope_depth);
     ~LocalVar() = default;
 
     Token token;
@@ -16,11 +16,26 @@ struct LocalVar
     int rbp_offset;
 };
 
+enum class ExprType
+{
+    Binary,
+    Literal,
+    Var,
+    Assign,
+    Unary,
+    Grouping,
+};
+
 struct Expr;
 
 struct BinaryExpr
 {
-    size_t line;
+    BinaryExpr(
+        std::unique_ptr<Expr> left, Token &&op, std::unique_ptr<Expr> right
+    );
+    BinaryExpr(BinaryExpr &&expr) = default;
+    ~BinaryExpr() = default;
+
     std::unique_ptr<Expr> left;
     Token op;
     std::unique_ptr<Expr> right;
@@ -28,48 +43,76 @@ struct BinaryExpr
 
 struct LiteralExpr
 {
-    size_t line;
+    LiteralExpr(Token &&token);
+    LiteralExpr(LiteralExpr &&expr) = default;
+    ~LiteralExpr() = default;
+
     Token token;
 };
 
 struct VarExpr
 {
-    size_t line;
+    VarExpr(LocalVar &&var);
+    VarExpr(VarExpr &&expr) = default;
+    ~VarExpr() = default;
+
     LocalVar var;
 };
 
 struct AssignExpr
 {
-    size_t line;
+    AssignExpr(LocalVar &&var, std::unique_ptr<Expr> expr);
+    AssignExpr(AssignExpr &&expr) = default;
+    ~AssignExpr() = default;
+
     LocalVar var;
     std::unique_ptr<Expr> expr;
 };
 
 struct UnaryExpr
 {
-    size_t line;
+    UnaryExpr(Token &&op, std::unique_ptr<Expr> expr);
+    UnaryExpr(UnaryExpr &&expr) = default;
+    ~UnaryExpr() = default;
+
     Token op;
-    std::unique_ptr<Expr> right;
+    std::unique_ptr<Expr> expr;
 };
 
 struct GroupingExpr
 {
-    size_t line;
+    GroupingExpr(std::unique_ptr<Expr> expr);
+    GroupingExpr(GroupingExpr &&expr) = default;
+    ~GroupingExpr() = default;
+
     std::unique_ptr<Expr> expr;
 };
 
 struct Expr
 {
-    using ExprVariant = std::variant<
-        BinaryExpr, LiteralExpr, VarExpr, AssignExpr, UnaryExpr, GroupingExpr>;
+    Expr(size_t line, BinaryExpr &&expr);
+    Expr(size_t line, LiteralExpr &&expr);
+    Expr(size_t line, VarExpr &&expr);
+    Expr(size_t line, AssignExpr &&expr);
+    Expr(size_t line, UnaryExpr &&expr);
+    Expr(size_t line, GroupingExpr &&expr);
+    ~Expr();
 
-    ExprVariant expr;
+    size_t line;
 
-    template <typename T>
-        requires std::constructible_from<ExprVariant, T>
-    Expr(T &&v) : expr(std::forward<T>(v))
+    ExprType kind;
+    union Variant
     {
-    }
+        BinaryExpr binary;
+        LiteralExpr literal;
+        VarExpr var;
+        AssignExpr assign;
+        UnaryExpr unary;
+        GroupingExpr grouping;
+
+        Variant() {}
+        ~Variant() {}
+    } variant;
 };
 
 #endif

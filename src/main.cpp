@@ -38,11 +38,12 @@ try
     Parser parser(tokens);
     auto statements = parser.parse();
 
-    // StmtAnalyzer analyzer;
-    // for (auto &stmt : statements)
-    // {
-    //     analyzer.analyze(*stmt);
-    // }
+    StmtAnalyzer analyzer;
+    for (auto &stmt : statements)
+    {
+        analyzer.analyze(*stmt);
+    }
+#include <string>
 
 #if DEBUG_AST
     StmtPrinter stmtPrinter;
@@ -52,10 +53,10 @@ try
     }
 #endif
 
-    // CodeGenerator generator(std::move(statements));
-    // std::string asm_code = generator.generate();
-    //
-    // common::write_file("test.asm", asm_code);
+    CodeGenerator generator(std::move(statements));
+    std::string asm_code = generator.generate();
+
+    common::write_file("test.asm", asm_code);
 }
 catch (error::Fatal const &error)
 {
