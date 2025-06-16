@@ -9,15 +9,16 @@
 class Analyzer
 {
    public:
-    Analyzer() : m_vars({}), m_scope_depth(0) {}
+    Analyzer() : m_had_error(0), m_vars({}), m_scope_depth(0) {}
     ~Analyzer() = default;
 
     void analyze(std::vector<std::unique_ptr<Stmt>> &statements);
 
+   private:
     void analyze_expr(Expr &expr);
     void analyze_stmt(Stmt &stmt);
 
-   private:
+    bool m_had_error;
     std::vector<LocalVar> m_vars;
     int m_scope_depth;
 };

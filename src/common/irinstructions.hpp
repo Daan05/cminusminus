@@ -3,7 +3,7 @@
 
 #include <string>
 
-enum class IRInstrType
+enum class IRType
 {
     Assign,
     BinaryOp,
@@ -16,23 +16,23 @@ enum class IRInstrType
 
 struct IRInstr;
 
-struct AssignIRInstr
+struct AssignIR
 {
-    AssignIRInstr(std::string dst, std::string src);
-    AssignIRInstr(AssignIRInstr &&instr) = default;
-    ~AssignIRInstr() = default;
+    AssignIR(std::string dst, std::string src);
+    AssignIR(AssignIR &&instr) = default;
+    ~AssignIR() = default;
 
     std::string dst;
     std::string src;
 };
 
-struct BinaryOpIRInstr
+struct BinaryOpIR
 {
-    BinaryOpIRInstr(
+    BinaryOpIR(
         std::string dst, std::string left, std::string op, std::string right
     );
-    BinaryOpIRInstr(BinaryOpIRInstr &&instr) = default;
-    ~BinaryOpIRInstr() = default;
+    BinaryOpIR(BinaryOpIR &&instr) = default;
+    ~BinaryOpIR() = default;
 
     std::string dst;
     std::string left;
@@ -40,78 +40,80 @@ struct BinaryOpIRInstr
     std::string right;
 };
 
-struct UnaryOpIRInstr
+struct UnaryOpIR
 {
-    UnaryOpIRInstr(std::string dst, std::string op, std::string val);
-    UnaryOpIRInstr(UnaryOpIRInstr &&instr) = default;
-    ~UnaryOpIRInstr() = default;
+    UnaryOpIR(std::string dst, std::string op, std::string val);
+    UnaryOpIR(UnaryOpIR &&instr) = default;
+    ~UnaryOpIR() = default;
 
     std::string dst;
     std::string op;
     std::string value;
 };
 
-struct GotoIRInstr
+struct GotoIR
 {
-    GotoIRInstr(std::string label);
-    GotoIRInstr(GotoIRInstr &&instr) = default;
-    ~GotoIRInstr() = default;
+    GotoIR(std::string label);
+    GotoIR(GotoIR &&instr) = default;
+    ~GotoIR() = default;
 
     std::string label;
 };
 
-struct IfFalseGotoIRInstr
+struct IfFalseGotoIR
 {
-    IfFalseGotoIRInstr(std::string condition, std::string label);
-    IfFalseGotoIRInstr(IfFalseGotoIRInstr &&instr) = default;
-    ~IfFalseGotoIRInstr() = default;
+    IfFalseGotoIR(std::string condition, std::string label);
+    IfFalseGotoIR(IfFalseGotoIR &&instr) = default;
+    ~IfFalseGotoIR() = default;
 
     std::string condition;
     std::string label;
 };
 
-struct LabelIRInstr
+struct LabelIR
 {
-    LabelIRInstr(std::string label);
-    LabelIRInstr(LabelIRInstr &&instr) = default;
-    ~LabelIRInstr() = default;
+    LabelIR(std::string label);
+    LabelIR(LabelIR &&instr) = default;
+    ~LabelIR() = default;
 
     std::string name;
 };
 
-struct PrintIRInstr
+struct PrintIR
 {
-    PrintIRInstr(std::string label);
-    PrintIRInstr(PrintIRInstr &&instr) = default;
-    ~PrintIRInstr() = default;
+    PrintIR(std::string label);
+    PrintIR(PrintIR &&instr) = default;
+    ~PrintIR() = default;
 
     std::string value;
 };
 struct IRInstr
 {
-    IRInstr(AssignIRInstr &&instr);
-    IRInstr(BinaryOpIRInstr &&instr);
-    IRInstr(UnaryOpIRInstr &&instr);
-    IRInstr(GotoIRInstr &&instr);
-    IRInstr(IfFalseGotoIRInstr &&instr);
-    IRInstr(LabelIRInstr &&instr);
-    IRInstr(PrintIRInstr &&instr);
+    IRInstr(AssignIR &&instr);
+    IRInstr(BinaryOpIR &&instr);
+    IRInstr(UnaryOpIR &&instr);
+    IRInstr(GotoIR &&instr);
+    IRInstr(IfFalseGotoIR &&instr);
+    IRInstr(LabelIR &&instr);
+    IRInstr(PrintIR &&instr);
     ~IRInstr();
 
-    IRInstrType kind;
+    IRType kind;
     union Variant
     {
-        AssignIRInstr assign;
-        BinaryOpIRInstr binaryOp;
-        UnaryOpIRInstr unaryOp;
-        GotoIRInstr goto_;
-        IfFalseGotoIRInstr ifFalseGoto;
-        LabelIRInstr label;
-        PrintIRInstr print;
+        AssignIR assign;
+        BinaryOpIR binaryOp;
+        UnaryOpIR unaryOp;
+        GotoIR goto_;
+        IfFalseGotoIR ifFalseGoto;
+        LabelIR label;
+        PrintIR print;
 
         Variant() {}
         ~Variant() {}
     } variant;
+
+    std::string to_string();
 };
 
 #endif
