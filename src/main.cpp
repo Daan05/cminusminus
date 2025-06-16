@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "common/error.hpp"
+#include "asmgenerator.hpp"
 #include "irgenerator.hpp"
 #include "common/common.hpp"
 #include "common/token.hpp"
@@ -53,9 +54,11 @@ try
     {
         std ::cout << instr->to_string() << '\n';
     }
-    // std::string asm_code = generator.generate(statements);
+    std::cout << "\n\n";
 
-    // common::write_file("test.asm", asm_code);
+    std::string asm_code = generate_assembly(ir);
+
+    common::write_file("test.asm", asm_code);
 }
 catch (error::Fatal const &error)
 {

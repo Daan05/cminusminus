@@ -40,7 +40,7 @@ run: all
 # Assembles and runs the generated assembly file
 test: run
 	@nasm -f elf64 test.asm -o test.o && \
-	gcc -no-pie test.o -o test && \
+	gcc -no-pie -nostartfiles test.o -o test && \
 	./test
 
 # Remove object files and the final executable.

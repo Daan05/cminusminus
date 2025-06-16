@@ -1,17 +1,8 @@
-let res = 0;
-
 let i = 0;
-while (i < 10) {
-    let j = 0;
-    while (j < 10) {
-        res = res + 1;
-        j = j + 1;
-    }
-    i = i + 1;
-}
+let result = 0;
 
-if (res == 100) {
-    print res;
-} else {
-    print -1;
+while (i < 999999999) {
+    result = result - 1;
+    result = result + 2;
+    i = i + 1;
 }
