@@ -1,94 +1,135 @@
 #include "irinstructions.hpp"
+#include "error.hpp"
 
-AssignIRInstr::AssignIRInstr(std::string dst, std::string src)
-    : dst(dst), src(src)
-{
-}
+AssignIR::AssignIR(std::string dst, std::string src) : dst(dst), src(src) {}
 
-BinaryOpIRInstr::BinaryOpIRInstr(
+BinaryOpIR::BinaryOpIR(
     std::string dst, std::string left, std::string op, std::string right
 )
     : dst(dst), left(left), op(op), right(right)
 {
 }
 
-UnaryOpIRInstr::UnaryOpIRInstr(
-    std::string dst, std::string op, std::string value
-)
+UnaryOpIR::UnaryOpIR(std::string dst, std::string op, std::string value)
     : dst(dst), op(op), value(value)
 {
 }
 
-GotoIRInstr::GotoIRInstr(std::string label) : label(label) {}
+GotoIR::GotoIR(std::string label) : label(label) {}
 
-IfFalseGotoIRInstr::IfFalseGotoIRInstr(std::string condition, std::string label)
+IfFalseGotoIR::IfFalseGotoIR(std::string condition, std::string label)
     : condition(condition), label(label)
 {
 }
 
-LabelIRInstr::LabelIRInstr(std::string name) : name(name) {}
+LabelIR::LabelIR(std::string name) : name(name) {}
 
-PrintIRInstr::PrintIRInstr(std::string value) : value(value) {}
+PrintIR::PrintIR(std::string value) : value(value) {}
 
-IRInstr::IRInstr(AssignIRInstr &&instr) : kind(IRInstrType::Assign)
+IRInstr::IRInstr(AssignIR &&instr) : kind(IRType::Assign)
 {
-    new (&variant.assign) AssignIRInstr(std::move(instr));
+    new (&variant.assign) AssignIR(std::move(instr));
 }
 
-IRInstr::IRInstr(BinaryOpIRInstr &&instr) : kind(IRInstrType::BinaryOp)
+IRInstr::IRInstr(BinaryOpIR &&instr) : kind(IRType::BinaryOp)
 {
-    new (&variant.binaryOp) BinaryOpIRInstr(std::move(instr));
+    new (&variant.binaryOp) BinaryOpIR(std::move(instr));
 }
 
-IRInstr::IRInstr(UnaryOpIRInstr &&instr) : kind(IRInstrType::UnaryOp)
+IRInstr::IRInstr(UnaryOpIR &&instr) : kind(IRType::UnaryOp)
 {
-    new (&variant.unaryOp) UnaryOpIRInstr(std::move(instr));
+    new (&variant.unaryOp) UnaryOpIR(std::move(instr));
 }
 
-IRInstr::IRInstr(GotoIRInstr &&instr) : kind(IRInstrType::Goto)
+IRInstr::IRInstr(GotoIR &&instr) : kind(IRType::Goto)
 {
-    new (&variant.goto_) GotoIRInstr(std::move(instr));
+    new (&variant.goto_) GotoIR(std::move(instr));
 }
 
-IRInstr::IRInstr(IfFalseGotoIRInstr &&instr) : kind(IRInstrType::IfFalseGoto)
+IRInstr::IRInstr(IfFalseGotoIR &&instr) : kind(IRType::IfFalseGoto)
 {
-    new (&variant.ifFalseGoto) IfFalseGotoIRInstr(std::move(instr));
+    new (&variant.ifFalseGoto) IfFalseGotoIR(std::move(instr));
 }
 
-IRInstr::IRInstr(LabelIRInstr &&instr) : kind(IRInstrType::Label)
+IRInstr::IRInstr(LabelIR &&instr) : kind(IRType::Label)
 {
-    new (&variant.label) LabelIRInstr(std::move(instr));
+    new (&variant.label) LabelIR(std::move(instr));
 }
 
-IRInstr::IRInstr(PrintIRInstr &&instr) : kind(IRInstrType::Print)
+IRInstr::IRInstr(PrintIR &&instr) : kind(IRType::Print)
 {
-    new (&variant.print) PrintIRInstr(std::move(instr));
+    new (&variant.print) PrintIR(std::move(instr));
 }
 
 IRInstr::~IRInstr()
 {
     switch (kind)
     {
-    case IRInstrType::Assign:
-        variant.assign.~AssignIRInstr();
+    case IRType::Assign:
+        variant.assign.~AssignIR();
         break;
-    case IRInstrType::BinaryOp:
-        variant.binaryOp.~BinaryOpIRInstr();
+    case IRType::BinaryOp:
+        variant.binaryOp.~BinaryOpIR();
         break;
-    case IRInstrType::UnaryOp:
-        variant.unaryOp.~UnaryOpIRInstr();
+    case IRType::UnaryOp:
+        variant.unaryOp.~UnaryOpIR();
         break;
-    case IRInstrType::Goto:
-        variant.goto_.~GotoIRInstr();
+    case IRType::Goto:
+        variant.goto_.~GotoIR();
         break;
-    case IRInstrType::IfFalseGoto:
-        variant.ifFalseGoto.~IfFalseGotoIRInstr();
+    case IRType::IfFalseGoto:
+        variant.ifFalseGoto.~IfFalseGotoIR();
         break;
-    case IRInstrType::Label:
-        variant.label.~LabelIRInstr();
+    case IRType::Label:
+        variant.label.~LabelIR();
         break;
-    case IRInstrType::Print:
-        variant.print.~PrintIRInstr();
+    case IRType::Print:
+        variant.print.~PrintIR();
         break;
     }
+}
+
+std::string IRInstr::to_string()
+{
+    switch (kind)
+    {
+    case IRType::Assign:
+    {
+        auto &ir = variant.assign;
+        return ir.dst + " = " + ir.src;
+    }
+    case IRType::BinaryOp:
+    {
+        auto &ir = variant.binaryOp;
+        return ir.dst + " = " + ir.left + " " + ir.op + " " + ir.right;
+    }
+    case IRType::UnaryOp:
+    {
+        auto &ir = variant.unaryOp;
+        return ir.dst + " = " + ir.op + " " + ir.value;
+    }
+    case IRType::Goto:
+    {
+        auto &ir = variant.goto_;
+        return "goto " + ir.label;
+    }
+    case IRType::IfFalseGoto:
+    {
+        auto &ir = variant.ifFalseGoto;
+        return "ifFalse " + ir.condition + " goto " + ir.label;
+    }
+    case IRType::Label:
+    {
+        auto &ir = variant.label;
+        return ir.name + ":";
+    }
+    case IRType::Print:
+    {
+        auto &ir = variant.print;
+        return "print " + ir.value;
+    }
+    }
+
+    error::unreachable();
+    return "";
 }

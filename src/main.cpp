@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "common/error.hpp"
-#include "codegenerator.hpp"
+#include "irgenerator.hpp"
 #include "common/common.hpp"
 #include "common/token.hpp"
 #include "lexer.hpp"
@@ -46,10 +46,16 @@ try
     printer.print(statements);
 #endif
 
-    CodeGenerator generator;
-    std::string asm_code = generator.generate(statements);
+    IRGenerator generator;
+    auto ir = generator.generate(statements);
 
-    common::write_file("test.asm", asm_code);
+    for (auto const &instr : ir)
+    {
+        std ::cout << instr->to_string() << '\n';
+    }
+    // std::string asm_code = generator.generate(statements);
+
+    // common::write_file("test.asm", asm_code);
 }
 catch (error::Fatal const &error)
 {
