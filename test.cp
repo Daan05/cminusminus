@@ -1,19 +1,9 @@
-let res = 0;
+let a = 9;
 
-let a = res * 7;
-
-let i = 0;
-while (i < 10) {
-    let j = 0;
-    while (j < 10) {
-        res = res + 1;
-        j = j + 1;
-    }
-    i = i + 1;
-}
-
-if (res == 100) {
-    print res;
+if (a == 0) {
+    print 0;
+} else if (a == 1) {
+    print 1;
 } else {
-    print -1;
+    print 2;
 }
