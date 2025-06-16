@@ -1,9 +1,15 @@
 #include "irinstructions.hpp"
+
 #include "error.hpp"
 
-AssignIR::AssignIR(std::string dst, std::string src) : dst(dst), src(src) {}
+#include <string>
 
-BinaryOpIR::BinaryOpIR(
+AssignIRInstr::AssignIRInstr(std::string dst, std::string src)
+    : dst(dst), src(src)
+{
+}
+
+BinaryOpIRInstr::BinaryOpIRInstr(
     std::string dst, std::string left, std::string op, std::string right
 )
     : dst(dst), left(left), op(op), right(right)
