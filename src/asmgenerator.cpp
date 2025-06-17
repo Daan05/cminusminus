@@ -75,16 +75,24 @@ std::string generate_assembly(const std::vector<std::unique_ptr<IRInstr>> &ir)
         case IRType::BinaryOp:
         {
             auto &a = instr->variant.binaryOp;
+
             oss << "    mov rax, [" << a.left << "]\n";
-            oss << "    cmp rax, [" << a.right << "]\n";
-            if (a.op == "==")
+            if (a.op == "==" || a.op == "!=" || a.op == "<" || a.op == ">" ||
+                a.op == "<=" || a.op == ">=")
             {
-                oss << "    sete al\n";
-                oss << "    movzx rax, al\n";
-            }
-            else if (a.op == "<")
-            {
-                oss << "    setl al\n";
+                oss << "    cmp rax, [" << a.right << "]\n";
+                if (a.op == "==")
+                    oss << "    sete al\n";
+                else if (a.op == "!=")
+                    oss << "    setne al\n";
+                else if (a.op == "<")
+                    oss << "    setl al\n";
+                else if (a.op == "<=")
+                    oss << "    setle al\n";
+                else if (a.op == ">")
+                    oss << "    setg al\n";
+                else if (a.op == ">=")
+                    oss << "    setge al\n";
                 oss << "    movzx rax, al\n";
             }
             else if (a.op == "+")
@@ -92,10 +100,21 @@ std::string generate_assembly(const std::vector<std::unique_ptr<IRInstr>> &ir)
                 oss << "    mov rbx, [" << a.right << "]\n";
                 oss << "    add rax, rbx\n";
             }
+            else if (a.op == "-")
+            {
+                oss << "    mov rbx, [" << a.right << "]\n";
+                oss << "    sub rax, rbx\n";
+            }
+            else if (a.op == "*")
+            {
+                oss << "    mov rbx, [" << a.right << "]\n";
+                oss << "    imul rax, rbx\n";
+            }
             else
             {
                 oss << "    ; unsupported binary op: " << a.op << "\n";
             }
+
             oss << "    mov [" << a.dst << "], rax\n";
             break;
         }
@@ -133,7 +152,7 @@ std::string generate_assembly(const std::vector<std::unique_ptr<IRInstr>> &ir)
         {
             auto &a = instr->variant.print;
             oss << "    mov rdi, fmt\n";
-            oss << "    mov rsi, [" <<  a.value << "]\n";
+            oss << "    mov rsi, [" << a.value << "]\n";
             oss << "    xor rax, rax\n";
             oss << "    call printf\n";
             break;

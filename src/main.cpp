@@ -11,7 +11,7 @@
 #include "printer.hpp"
 
 #define DEBUG_TOKENS 0
-#define DEBUG_AST 0
+#define DEBUG_AST 1
 
 int main(int argc, char **argv)
 try
@@ -39,13 +39,13 @@ try
     Parser parser(tokens);
     auto statements = parser.parse();
 
-    Analyzer analyzer;
-    analyzer.analyze(statements);
-
 #if DEBUG_AST
     Printer printer;
     printer.print(statements);
-#endif
+#endif 
+
+    Analyzer analyzer;
+    analyzer.analyze(statements);
 
     IRGenerator generator;
     auto ir = generator.generate(statements);
