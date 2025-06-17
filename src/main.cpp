@@ -10,7 +10,7 @@
 #include "analyzer.hpp"
 #include "printer.hpp"
 
-#define DEBUG_TOKENS 1
+#define DEBUG_TOKENS 0
 #define DEBUG_AST 1
 
 int main(int argc, char **argv)

@@ -99,6 +99,15 @@ std::string Printer::print_stmt(Stmt const &stmt, int indent_level)
         oss << print_expr(*stmt.variant.while_.condition) << '\n';
         oss << print_stmt(*stmt.variant.while_.body, indent_level);
         break;
+    case StmtType::Func:
+        oss << pad << "FUNC DECL: " << stmt.variant.func.name.lexeme << "(";
+        for (auto const &param : stmt.variant.func.params)
+        {
+            oss << param.lexeme << " ";
+        }
+        oss << ")\n";
+        oss << print_stmt(*stmt.variant.func.body);
+        break;
     default:
         error::unreachable();
         break;

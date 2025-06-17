@@ -84,7 +84,11 @@ std::unique_ptr<Stmt> Parser::parse_func_decl()
     }
     consume(TokenType::RightParen, "Expect ')' after parameters.");
 
-    return nullptr;
+    consume(TokenType::LeftBrace, "Expect '{' before function body.");
+
+    auto body = parse_block_stmt();
+
+    return std::make_unique<Stmt>(name.line, FuncStmt(std::move(name), std::move(parameters), std::move(body)));
 }
 
 std::unique_ptr<Stmt> Parser::parse_var_decl()
