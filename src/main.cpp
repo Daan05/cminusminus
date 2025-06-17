@@ -10,7 +10,7 @@
 #include "analyzer.hpp"
 #include "printer.hpp"
 
-#define DEBUG_TOKENS 0
+#define DEBUG_TOKENS 1
 #define DEBUG_AST 1
 
 int main(int argc, char **argv)
@@ -44,21 +44,21 @@ try
     printer.print(statements);
 #endif 
 
-    Analyzer analyzer;
-    analyzer.analyze(statements);
+    // Analyzer analyzer;
+    // analyzer.analyze(statements);
 
-    IRGenerator generator;
-    auto ir = generator.generate(statements);
+    // IRGenerator generator;
+    // auto ir = generator.generate(statements);
 
-    for (auto const &instr : ir)
-    {
-        std ::cout << instr->to_string() << '\n';
-    }
-    std::cout << "\n\n";
+    // for (auto const &instr : ir)
+    // {
+    //     std ::cout << instr->to_string() << '\n';
+    // }
+    // std::cout << "\n\n";
 
-    std::string asm_code = generate_assembly(ir);
-
-    common::write_file("test.asm", asm_code);
+    // std::string asm_code = generate_assembly(ir);
+    
+    // common::write_file("test.asm", asm_code);
 }
 catch (error::Fatal const &error)
 {

@@ -42,6 +42,10 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 std::unique_ptr<Stmt> Parser::parse_decl()
 try
 {
+    if (match({TokenType::Fn}))
+    {
+        return parse_func_decl();
+    }
     if (match({TokenType::Let}))
     {
         return parse_var_decl();
@@ -53,6 +57,33 @@ catch (error::Synchronize const &err)
 {
     m_had_error = true;
     synchronize();
+    return nullptr;
+}
+
+std::unique_ptr<Stmt> Parser::parse_func_decl()
+{
+    Token name = consume(TokenType::Identifier, "Expected function name.");
+
+    consume(TokenType::LeftParen, "Expect '(' after function name.");
+    std::vector<Token> parameters = {};
+    if (!check(TokenType::RightParen))
+    {
+        do
+        {
+            if (parameters.size() >= 255)
+            {
+                error::Synchronize(
+                    peek().line, "Can't have more than 255 parameters."
+                );
+            }
+
+            parameters.push_back(
+                consume(TokenType::Identifier, "Expect parameter name.")
+            );
+        } while (match({TokenType::Comma}));
+    }
+    consume(TokenType::RightParen, "Expect ')' after parameters.");
+
     return nullptr;
 }
 
@@ -227,11 +258,13 @@ std::unique_ptr<Stmt> Parser::parse_for_stmt()
     if (initializer != nullptr)
     {
         std::vector<std::unique_ptr<Stmt>> for_stmt = {};
-        
+
         for_stmt.push_back(std::move(initializer));
         for_stmt.push_back(std::move(body));
 
-        body = std::make_unique<Stmt>(previous().line, BlockStmt(std::move(for_stmt)));
+        body = std::make_unique<Stmt>(
+            previous().line, BlockStmt(std::move(for_stmt))
+        );
     }
 
     return body;
@@ -382,7 +415,44 @@ std::unique_ptr<Expr> Parser::parse_unary()
         );
     }
 
-    return parse_primary();
+    return parse_func_call();
+}
+
+std::unique_ptr<Expr> Parser::parse_func_call()
+{
+    auto expr = parse_primary();
+
+    while (true)
+    {
+        if (match({TokenType::LeftParen}))
+        {
+            expr = parse_finish_call(std::move(expr));
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return expr;
+}
+
+std::unique_ptr<Expr> Parser::parse_finish_call(std::unique_ptr<Expr> callee)
+{
+    std::vector<std::unique_ptr<Expr>> arguments = {};
+    if (!check(TokenType::RightParen))
+    {
+        do
+        {
+            arguments.push_back(parse_expr());
+        } while (match({TokenType::Comma}));
+    }
+
+    Token paren = consume(TokenType::RightParen, "Expect ')' after arguments.");
+
+    return std::make_unique<Expr>(
+        paren.line, CallExpr(std::move(callee), std::move(arguments))
+    );
 }
 
 std::unique_ptr<Expr> Parser::parse_primary()

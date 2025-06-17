@@ -69,6 +69,7 @@ std::string IRGenerator::lower_expr(Expr const &expr)
     {
         return lower_expr(*expr.variant.grouping.expr);
     }
+        default: error::unreachable();
     }
 
     error::unreachable();
@@ -139,5 +140,7 @@ void IRGenerator::lower_stmt(Stmt const &stmt)
         m_context.emit(std::make_unique<IRInstr>(LabelIR(endLabel)));
         break;
     }
+    default:
+        error::unreachable();
     }
 }

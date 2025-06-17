@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 #include "token.hpp"
 
@@ -24,6 +25,7 @@ enum class ExprType
     Assign,
     Unary,
     Grouping,
+    Call,
 };
 
 struct Expr;
@@ -88,6 +90,16 @@ struct GroupingExpr
     std::unique_ptr<Expr> expr;
 };
 
+struct CallExpr
+{
+    CallExpr(std::unique_ptr<Expr> callee, std::vector<std::unique_ptr<Expr>> args);
+    CallExpr(CallExpr &&expr) = default;
+    ~CallExpr() = default;
+
+    std::unique_ptr<Expr> callee;
+    std::vector<std::unique_ptr<Expr>> args;
+};
+
 struct Expr
 {
     Expr(size_t line, BinaryExpr &&expr);
@@ -96,6 +108,7 @@ struct Expr
     Expr(size_t line, AssignExpr &&expr);
     Expr(size_t line, UnaryExpr &&expr);
     Expr(size_t line, GroupingExpr &&expr);
+    Expr(size_t line, CallExpr &&expr);
     ~Expr();
 
     size_t line;
@@ -109,6 +122,7 @@ struct Expr
         AssignExpr assign;
         UnaryExpr unary;
         GroupingExpr grouping;
+        CallExpr call;
 
         Variant() {}
         ~Variant() {}

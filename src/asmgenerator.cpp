@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <set>
+#include "common/error.hpp"
 
 std::string generate_assembly(const std::vector<std::unique_ptr<IRInstr>> &ir)
 {
@@ -37,6 +38,8 @@ std::string generate_assembly(const std::vector<std::unique_ptr<IRInstr>> &ir)
         case IRType::Print:
             vars.insert(instr->variant.print.value);
             break;
+        default:
+            error::unreachable();
         }
     }
 
@@ -156,6 +159,10 @@ std::string generate_assembly(const std::vector<std::unique_ptr<IRInstr>> &ir)
             oss << "    xor rax, rax\n";
             oss << "    call printf\n";
             break;
+        }
+        default:
+        {
+            error::unreachable();
         }
         }
     }

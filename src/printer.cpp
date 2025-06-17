@@ -5,6 +5,7 @@
 
 #include "common/error.hpp"
 #include "common/statements.hpp"
+#include "common/expression.hpp"
 
 void Printer::print(std::vector<std::unique_ptr<Stmt>> const &statements)
 {
@@ -43,6 +44,9 @@ std::string Printer::print_expr(Expr const &expr)
         break;
     case ExprType::Grouping:
         oss << "(group " << print_expr(*expr.variant.grouping.expr) << ")";
+        break;
+    case ExprType::Call:
+        oss << expr.variant.call.callee->variant.var.var.token.lexeme << "()";
         break;
     default:
         error::unreachable();
