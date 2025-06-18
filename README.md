@@ -25,6 +25,16 @@ fn some_func(start_val) {
     }
 }
 
+fn rec_func(n) {
+    print n;
+
+    if (n)
+        rec_func(n - 1);
+}
+
 some_func(0); // prints 100
 some_func(1); // prints -1
+
+rec_func(10); // prints 10 9 8 7 6 5 4 3 2 1 0
+
 ```
