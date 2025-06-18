@@ -46,7 +46,12 @@ std::string Printer::print_expr(Expr const &expr)
         oss << "(group " << print_expr(*expr.variant.grouping.expr) << ")";
         break;
     case ExprType::Call:
-        oss << expr.variant.call.callee->variant.var.var.token.lexeme << "()";
+        oss << expr.variant.call.callee->variant.var.var.token.lexeme << "(";
+        for (auto const &param : expr.variant.call.args)
+        {
+            oss << param->variant.literal.token.lexeme << " ";
+        }
+        oss << ")";
         break;
     default:
         error::unreachable();

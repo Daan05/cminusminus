@@ -42,23 +42,31 @@ try
 #if DEBUG_AST
     Printer printer;
     printer.print(statements);
-#endif 
+    std::cout << "\n\n";
+#endif
 
-    // Analyzer analyzer;
-    // analyzer.analyze(statements);
+    Analyzer analyzer;
+    analyzer.analyze(statements);
 
-    // IRGenerator generator;
-    // auto ir = generator.generate(statements);
+    IRGenerator generator;
+    auto ir = generator.generate(statements);
+    for (auto const &func : ir.second)
+    {
+        for (auto const &instr : func.second.body)
+        {
+            std ::cout << instr->to_string() << '\n';
+        }
+         std::cout << '\n';
+    }
+    for (auto const &instr : ir.first)
+    {
+        std ::cout << instr->to_string() << '\n';
+    }
+    std::cout << "\n\n";
 
-    // for (auto const &instr : ir)
-    // {
-    //     std ::cout << instr->to_string() << '\n';
-    // }
-    // std::cout << "\n\n";
+    std::string asm_code = generate_assembly(ir);
 
-    // std::string asm_code = generate_assembly(ir);
-    
-    // common::write_file("test.asm", asm_code);
+    common::write_file("test.asm", asm_code);
 }
 catch (error::Fatal const &error)
 {

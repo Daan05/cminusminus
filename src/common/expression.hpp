@@ -14,7 +14,6 @@ struct LocalVar
 
     Token token;
     int scope_depth;
-    int rbp_offset;
 };
 
 enum class ExprType

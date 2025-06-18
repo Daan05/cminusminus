@@ -2,7 +2,7 @@
 #include <utility>
 
 LocalVar::LocalVar(Token token, int scope_depth)
-    : token(token), scope_depth(scope_depth), rbp_offset(0) {};
+    : token(token), scope_depth(scope_depth) {};
 
 BinaryExpr::BinaryExpr(
     std::unique_ptr<Expr> left, Token &&op, std::unique_ptr<Expr> right

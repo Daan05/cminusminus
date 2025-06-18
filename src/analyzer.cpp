@@ -1,6 +1,8 @@
 #include "analyzer.hpp"
 
 #include "common/error.hpp"
+#include "common/expression.hpp"
+#include "common/statements.hpp"
 
 void Analyzer::analyze(std::vector<std::unique_ptr<Stmt>> &statements)
 {
@@ -38,7 +40,6 @@ void Analyzer::analyze_expr(Expr &expr)
             if (var_expr.var.token.lexeme == m_vars[ix].token.lexeme)
             {
                 is_declared = true;
-                var_expr.var.rbp_offset = (ix + 1) * 8;
                 break;
             }
         }
@@ -61,7 +62,6 @@ void Analyzer::analyze_expr(Expr &expr)
             if (assign_expr.var.token.lexeme == m_vars[ix].token.lexeme)
             {
                 is_declared = true;
-                assign_expr.var.rbp_offset = (ix + 1) * 8;
                 break;
             }
         }
@@ -86,9 +86,9 @@ void Analyzer::analyze_expr(Expr &expr)
         analyze_expr(*expr.variant.grouping.expr);
         break;
     }
-    default:
+    case ExprType::Call:
     {
-        error::unreachable();
+        // check if function exists
         break;
     }
     }
@@ -125,7 +125,6 @@ void Analyzer::analyze_stmt(Stmt &stmt)
                 "Limit of 256 local vars has been exceeded"
             );
         }
-        stmt.variant.var.var.rbp_offset = m_vars.size() * 8;
         break;
     case StmtType::Block:
         m_scope_depth++;
@@ -152,8 +151,22 @@ void Analyzer::analyze_stmt(Stmt &stmt)
         analyze_expr(*stmt.variant.while_.condition);
         analyze_stmt(*stmt.variant.while_.body);
         break;
-    default:
-        error::unreachable();
+    case StmtType::Func:
+        m_scope_depth++;
+
+        for (auto const &param : stmt.variant.func.params)
+        {
+            m_vars.push_back(LocalVar(param, m_scope_depth));
+        }
+
+        analyze_stmt(*stmt.variant.func.body);
+
+        while (!m_vars.empty() && m_vars.back().scope_depth >= m_scope_depth)
+        {
+            m_vars.pop_back();
+        }
+
+        m_scope_depth--;
         break;
     }
 }
