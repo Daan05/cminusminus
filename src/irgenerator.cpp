@@ -162,12 +162,8 @@ void IRGenerator::lower_stmt(Stmt const &stmt)
         std::string funcLabel = "func_" + fn.name.lexeme;
 
         auto old_main = std::move(m_context.main);
-        int old_temp = m_context.temp_count;
-        int old_label = m_context.label_count;
 
         m_context.main.clear();
-        m_context.temp_count = 0;
-        m_context.label_count = 0;
 
         m_context.emit_main(std::make_unique<IRInstr>(LabelIR(funcLabel)));
         lower_stmt(*fn.body);
@@ -181,9 +177,6 @@ void IRGenerator::lower_stmt(Stmt const &stmt)
         m_context.functions[fn.name.lexeme].body = std::move(m_context.main);
 
         m_context.main = std::move(old_main);
-        m_context.temp_count = old_temp;
-        m_context.label_count = old_label;
-
         break;
     }
     }

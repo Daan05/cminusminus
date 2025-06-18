@@ -217,6 +217,23 @@ std::string generate_assembly(
             }
             case IRType::Call:
             {
+                auto &a = instr->variant.call;
+                auto &f = ir.second[a.funcName];
+
+                for (size_t i = 0; i < a.args.size(); ++i)
+                {
+                    oss << "\tmov rax, [" << a.args[i] << "]\n";
+                    oss << "\tmov [" << f.params[i] << "], rax\n";
+                }
+
+                oss << "\tcall " << "func_" << a.funcName << "\n";
+
+                if (!a.dst.empty())
+                {
+                    oss << "\tmov rax, [t0]\n";
+                    oss << "\tmov [" << a.dst << "], rax\n";
+                }
+                break;
             }
             case IRType::Return:
                 oss << "\tret\n";
