@@ -32,6 +32,12 @@ WhileStmt::WhileStmt(
     : condition(std::move(condition)), body(std::move(body))
 {
 }
+FuncStmt::FuncStmt(
+    Token &&name, std::vector<Token> params, std::unique_ptr<Stmt> body
+)
+    : name(std::move(name)), params(std::move(params)), body(std::move(body))
+{
+}
 
 Stmt::Stmt(size_t line, ExprStmt &&expr) : line(line), kind(StmtType::Expr)
 {
@@ -63,6 +69,11 @@ Stmt::Stmt(size_t line, WhileStmt &&expr) : line(line), kind(StmtType::While)
     new (&variant.while_) WhileStmt(std::move(expr));
 }
 
+Stmt::Stmt(size_t line, FuncStmt &&expr) : line(line), kind(StmtType::Func)
+{
+    new (&variant.func) FuncStmt(std::move(expr));
+}
+
 Stmt::~Stmt()
 {
     switch (kind)
@@ -84,6 +95,9 @@ Stmt::~Stmt()
         break;
     case StmtType::While:
         variant.while_.~WhileStmt();
+        break;
+    case StmtType::Func:
+        variant.func.~FuncStmt();
         break;
     }
 }

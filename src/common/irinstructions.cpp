@@ -4,12 +4,9 @@
 
 #include <string>
 
-AssignIRInstr::AssignIRInstr(std::string dst, std::string src)
-    : dst(dst), src(src)
-{
-}
+AssignIR::AssignIR(std::string dst, std::string src) : dst(dst), src(src) {}
 
-BinaryOpIRInstr::BinaryOpIRInstr(
+BinaryOpIR::BinaryOpIR(
     std::string dst, std::string left, std::string op, std::string right
 )
     : dst(dst), left(left), op(op), right(right)
@@ -31,6 +28,15 @@ IfFalseGotoIR::IfFalseGotoIR(std::string condition, std::string label)
 LabelIR::LabelIR(std::string name) : name(name) {}
 
 PrintIR::PrintIR(std::string value) : value(value) {}
+
+CallIR::CallIR(
+    std::string dst, std::string funcName, std::vector<std::string> args
+)
+    : dst(dst), funcName(funcName), args(args)
+{
+}
+
+ReturnIR::ReturnIR(std::string value) : value(value) {}
 
 IRInstr::IRInstr(AssignIR &&instr) : kind(IRType::Assign)
 {
@@ -67,6 +73,16 @@ IRInstr::IRInstr(PrintIR &&instr) : kind(IRType::Print)
     new (&variant.print) PrintIR(std::move(instr));
 }
 
+IRInstr::IRInstr(CallIR &&instr) : kind(IRType::Call)
+{
+    new (&variant.call) CallIR(std::move(instr));
+}
+
+IRInstr::IRInstr(ReturnIR &&instr) : kind(IRType::Return)
+{
+    new (&variant.return_) ReturnIR(std::move(instr));
+}
+
 IRInstr::~IRInstr()
 {
     switch (kind)
@@ -91,6 +107,12 @@ IRInstr::~IRInstr()
         break;
     case IRType::Print:
         variant.print.~PrintIR();
+        break;
+    case IRType::Call:
+        variant.call.~CallIR();
+        break;
+    case IRType::Return:
+        variant.return_.~ReturnIR();
         break;
     }
 }
@@ -133,6 +155,22 @@ std::string IRInstr::to_string()
     {
         auto &ir = variant.print;
         return "print " + ir.value;
+    }
+    case IRType::Call:
+    {
+        auto &ir = variant.call;
+        std::string str = ir.funcName + "(";
+        for (auto const &arg : ir.args)
+        {
+            str += arg + " ";
+        }
+        str += ")";
+        return str;
+    }
+    case IRType::Return:
+    {
+        auto &ir = variant.return_;
+        return "return " + ir.value;
     }
     }
 

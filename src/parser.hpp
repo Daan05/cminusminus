@@ -25,6 +25,7 @@ class Parser
 
    private:
     std::unique_ptr<Stmt> parse_decl();
+    std::unique_ptr<Stmt> parse_func_decl();
     std::unique_ptr<Stmt> parse_var_decl();
 
     std::unique_ptr<Stmt> parse_stmt();
@@ -33,8 +34,7 @@ class Parser
     std::unique_ptr<Stmt> parse_expr_stmt();
     std::unique_ptr<Stmt> parse_if_stmt();
     std::unique_ptr<Stmt> parse_while_stmt();
-
-    std::unique_ptr<Stmt> parse_block();
+    std::unique_ptr<Stmt> parse_for_stmt();
 
     std::unique_ptr<Expr> parse_expr();
     std::unique_ptr<Expr> parse_assignment();
@@ -45,6 +45,8 @@ class Parser
     std::unique_ptr<Expr> parse_term();
     std::unique_ptr<Expr> parse_factor();
     std::unique_ptr<Expr> parse_unary();
+    std::unique_ptr<Expr> parse_func_call();
+    std::unique_ptr<Expr> parse_finish_call(std::unique_ptr<Expr> callee);
     std::unique_ptr<Expr> parse_primary();
 
     void synchronize();

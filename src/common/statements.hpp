@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "token.hpp"
 #include "expression.hpp"
 
 enum class StmtType
@@ -14,6 +15,7 @@ enum class StmtType
     Block,
     If,
     While,
+    Func,
 };
 
 struct Stmt;
@@ -79,6 +81,19 @@ struct WhileStmt
     std::unique_ptr<Stmt> body;
 };
 
+struct FuncStmt
+{
+    FuncStmt(
+        Token &&name, std::vector<Token> params,
+        std::unique_ptr<Stmt> body
+    );
+    FuncStmt(FuncStmt &&stmt) = default;
+    ~FuncStmt() = default;
+
+    Token name;
+    std::vector<Token> params;
+    std::unique_ptr<Stmt> body;
+};
 
 struct Stmt
 {
@@ -88,6 +103,7 @@ struct Stmt
     Stmt(size_t line, BlockStmt &&expr);
     Stmt(size_t line, IfStmt &&expr);
     Stmt(size_t line, WhileStmt &&expr);
+    Stmt(size_t line, FuncStmt &&expr);
     ~Stmt();
 
     size_t line;
@@ -101,6 +117,7 @@ struct Stmt
         BlockStmt block;
         IfStmt if_;
         WhileStmt while_;
+        FuncStmt func;
 
         Variant() {}
         ~Variant() {}

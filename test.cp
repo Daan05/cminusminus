@@ -1,8 +1,10 @@
-let i = 0;
-let result = 0;
-
-while (i < 999999999) {
-    result = result - 1;
-    result = result + 2;
-    i = i + 1;
+fn add(a, b) {
+    print a + b;
 }
+
+fn sub(a, b) {
+    print a - b;
+}
+
+add(3, 4);
+sub(8, 1);

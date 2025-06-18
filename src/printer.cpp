@@ -5,6 +5,7 @@
 
 #include "common/error.hpp"
 #include "common/statements.hpp"
+#include "common/expression.hpp"
 
 void Printer::print(std::vector<std::unique_ptr<Stmt>> const &statements)
 {
@@ -43,6 +44,14 @@ std::string Printer::print_expr(Expr const &expr)
         break;
     case ExprType::Grouping:
         oss << "(group " << print_expr(*expr.variant.grouping.expr) << ")";
+        break;
+    case ExprType::Call:
+        oss << expr.variant.call.callee->variant.var.var.token.lexeme << "(";
+        for (auto const &param : expr.variant.call.args)
+        {
+            oss << param->variant.literal.token.lexeme << " ";
+        }
+        oss << ")";
         break;
     default:
         error::unreachable();
@@ -94,6 +103,15 @@ std::string Printer::print_stmt(Stmt const &stmt, int indent_level)
         oss << pad << "WHILE ";
         oss << print_expr(*stmt.variant.while_.condition) << '\n';
         oss << print_stmt(*stmt.variant.while_.body, indent_level);
+        break;
+    case StmtType::Func:
+        oss << pad << "FUNC DECL: " << stmt.variant.func.name.lexeme << "(";
+        for (auto const &param : stmt.variant.func.params)
+        {
+            oss << param.lexeme << " ";
+        }
+        oss << ")\n";
+        oss << print_stmt(*stmt.variant.func.body);
         break;
     default:
         error::unreachable();

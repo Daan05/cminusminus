@@ -2,6 +2,7 @@
 #define COMMON_IR_INSTRUCTIONS_HPP
 
 #include <string>
+#include <vector>
 
 enum class IRType
 {
@@ -12,6 +13,8 @@ enum class IRType
     IfFalseGoto,
     Label,
     Print,
+    Call,
+    Return,
 };
 
 struct IRInstr;
@@ -87,6 +90,29 @@ struct PrintIR
 
     std::string value;
 };
+
+struct CallIR
+{
+    CallIR(
+        std::string dst, std::string funcName, std::vector<std::string> args
+    );
+    CallIR(CallIR &&instr) = default;
+    ~CallIR() = default;
+
+    std::string dst;
+    std::string funcName;
+    std::vector<std::string> args;
+};
+
+struct ReturnIR
+{
+    ReturnIR(std::string value);
+    ReturnIR(ReturnIR &&instr) = default;
+    ~ReturnIR() = default;
+
+    std::string value;
+};
+
 struct IRInstr
 {
     IRInstr(AssignIR &&instr);
@@ -96,6 +122,8 @@ struct IRInstr
     IRInstr(IfFalseGotoIR &&instr);
     IRInstr(LabelIR &&instr);
     IRInstr(PrintIR &&instr);
+    IRInstr(CallIR &&instr);
+    IRInstr(ReturnIR &&instr);
     ~IRInstr();
 
     IRType kind;
@@ -108,6 +136,8 @@ struct IRInstr
         IfFalseGotoIR ifFalseGoto;
         LabelIR label;
         PrintIR print;
+        CallIR call;
+        ReturnIR return_;
 
         Variant() {}
         ~Variant() {}
