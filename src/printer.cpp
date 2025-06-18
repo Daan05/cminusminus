@@ -47,10 +47,10 @@ std::string Printer::print_expr(Expr const &expr)
         break;
     case ExprType::Call:
         oss << expr.variant.call.callee->variant.var.var.token.lexeme << "(";
-        for (auto const &param : expr.variant.call.args)
-        {
-            oss << param->variant.literal.token.lexeme << " ";
-        }
+        // for (auto const &param : expr.variant.call.args)
+        // {
+        //     oss << param->variant.literal.token.lexeme << " ";
+        // }
         oss << ")";
         break;
     default:
